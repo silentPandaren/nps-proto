@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>War Robots — Market</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0d;--surface:#1a1a1a;--surface2:#242424;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#fff;--text2:rgba(255,255,255,0.65);--text3:rgba(255,255,255,0.35);
+  --accent:#f0c323;--green:#51ac17;--blue:#4285f4;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;flex-direction:column;animation:fadeIn .22s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(13,13,13,.93);backdrop-filter:blur(12px);z-index:10;flex-shrink:0}
+.back-btn{width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;transition:background .15s}
+.back-btn:hover{background:#2e2e2e;color:var(--text)}
+.topbar-title{font-size:16px;font-weight:600}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.topbar-right{margin-left:auto}
+.account-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer}
+.dot{width:7px;height:7px;border-radius:50%;background:#4caf50;flex-shrink:0}
+
+/* ══════════════════════════════
+   S1 — STOREFRONT
+══════════════════════════════ */
+.store-body{flex:1;padding:16px;max-width:960px;width:100%;margin:0 auto}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 16px;font-size:14px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;margin-bottom:-1px;flex-shrink:0;transition:color .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.filters{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+.f-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.f-btn.active,.f-btn:hover{background:rgba(255,255,255,.1);color:var(--text);border-color:var(--border2)}
+.section-label{font-size:15px;font-weight:600;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:800px){.grid{grid-template-columns:repeat(6,1fr)}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--border2)}
+.card:active{transform:scale(.97)}
+.card-img{aspect-ratio:1;background:linear-gradient(135deg,#111827,#1e3a5f);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
+.tag{position:absolute;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em}
+.tag-ltd{top:5px;left:5px;background:#c0392b;color:#fff}
+.tag-spc{top:5px;left:5px;background:#8e44ad;color:#fff}
+.tag-pop{top:5px;left:5px;background:#e67e22;color:#fff}
+.tag-corp{background:rgba(255,255,255,.15);color:var(--text2);border:1px solid rgba(255,255,255,.2)}
+.tag-corp-lt{top:5px;left:5px}
+.tag-corp-rb{top:20px;left:5px}
+.bonus-tag{position:absolute;top:5px;right:5px;background:#1a472a;color:#4caf50;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:700}
+.offer-tag{position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:2px 5px;font-size:9px;color:#fff;font-weight:600;line-height:1.3}
+.card-body{padding:8px 9px 10px}
+.card-name{font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:8px;min-height:30px}
+.price-pill{background:var(--blue);color:#fff;border-radius:5px;padding:4px 8px;font-size:11px;font-weight:600;display:inline-block}
+
+/* ══════════════════════════════
+   S2 — PRODUCT DETAIL
+══════════════════════════════ */
+.detail-body{flex:1;display:flex;flex-direction:column;max-width:480px;width:100%;margin:0 auto;padding:0 16px 32px}
+.detail-hero{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.07) 0%,transparent 70%),linear-gradient(180deg,#111827 0%,#0d0d0d 100%);display:flex;flex-direction:column;align-items:center;padding:32px 24px 24px;gap:12px;text-align:center;margin:0 -16px;border-bottom:1px solid var(--border)}
+.detail-emoji{font-size:72px;line-height:1;margin-bottom:4px}
+.detail-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dtag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px}
+.dtag-ltd{background:#c0392b22;color:#e74c3c;border:1px solid #c0392b44}
+.dtag-pop{background:#e67e2222;color:#f39c12;border:1px solid #e67e2244}
+.dtag-corp{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid rgba(255,255,255,.15)}
+.detail-name{font-size:22px;font-weight:700;color:var(--accent)}
+.detail-game{font-size:13px;color:var(--text2)}
+.detail-form{display:flex;flex-direction:column;gap:14px;padding-top:20px;flex:1}
+.form-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.account-box{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.acc-label-sm{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.acc-id-lg{font-size:15px;font-weight:600}
+.acc-change{margin-left:auto;font-size:13px;color:var(--blue);cursor:pointer;flex-shrink:0}
+.divider{height:1px;background:var(--border);margin:4px 0}
+.price-row{display:flex;justify-content:space-between;align-items:center}
+.price-row .plabel{font-size:14px;color:var(--text2)}
+.price-row .pvalue{font-size:24px;font-weight:700}
+.btn-primary{width:100%;background:#fff;color:#141414;border:none;border-radius:9999px;padding:15px;font-size:17px;font-weight:600;cursor:pointer;transition:opacity .15s;margin-top:auto}
+.btn-primary:hover{opacity:.88}
+.btn-primary:active{transform:scale(.98)}
+
+/* ══════════════════════════════
+   S3 — PROCESSING
+══════════════════════════════ */
+.processing-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:32px 24px;text-align:center}
+.big-spinner{width:64px;height:64px;border:4px solid rgba(255,255,255,.1);border-top-color:rgba(255,255,255,.8);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-title{font-size:18px;font-weight:600}
+.proc-sub{font-size:14px;color:var(--text2);line-height:1.6;margin-top:6px}
+.prog-wrap{width:200px;height:3px;background:rgba(255,255,255,.1);border-radius:9px;overflow:hidden}
+.prog-bar{height:100%;background:#fff;border-radius:9px;width:0}
+
+/* ══════════════════════════════
+   S4 — SUCCESS
+══════════════════════════════ */
+.success-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:48px 24px;max-width:520px;width:100%;margin:0 auto;text-align:center;gap:24px}
+
+.success-game-chip{display:flex;align-items:center;gap:10px}
+.success-game-chip .chip-logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1a3a5c,#2d6a9f);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0}
+.success-game-chip .chip-name{font-size:15px;font-weight:600}
+
+.success-product{display:flex;flex-direction:column;align-items:center;gap:8px}
+.success-product-img{font-size:96px;line-height:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,.6))}
+
+.success-info{display:flex;flex-direction:column;align-items:center;gap:10px}
+.success-check{display:flex;align-items:center;gap:10px}
+.check-icon{width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-icon svg{width:14px;height:14px}
+.success-title{font-size:22px;font-weight:700}
+.success-sub{font-size:13px;color:var(--text2);line-height:1.6}
+.success-sub span{color:var(--green);font-weight:500}
+
+.btn-back-market{width:100%;background:#fff;color:#141414;border:none;border-radius:9999px;padding:15px;font-size:17px;font-weight:600;cursor:pointer;transition:opacity .15s;max-width:360px}
+.btn-back-market:hover{opacity:.88}
+.btn-back-market:active{transform:scale(.98)}
+
+/* ══════════════════════════════
+   NPS OVERLAY
+══════════════════════════════ */
+.nps-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(6px);animation:overlayIn .25s ease}
+.nps-overlay.hidden{display:none}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+
+.nps-sheet{background:var(--surface);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:24px 24px 40px;animation:sheetUp .3s cubic-bezier(.32,.72,0,1)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+
+@media(min-width:540px){
+  .nps-overlay{align-items:center;padding:24px}
+  .nps-sheet{border-radius:16px;border:1px solid var(--border2);max-width:420px;padding:28px}
+}
+
+.nps-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px}
+@media(min-width:540px){.nps-handle{display:none}}
+
+/* nps image header */
+.nps-img-wrap{margin:-24px -24px 20px;overflow:hidden;border-radius:20px 20px 0 0;position:relative;height:160px;display:none}
+.nps-img-wrap.has-img{display:block}
+.nps-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.nps-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(13,13,13,.9) 100%)}
+@media(min-width:540px){
+  .nps-img-wrap{margin:-28px -28px 20px;border-radius:16px 16px 0 0}
+}
+
+.nps-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.nps-desc{font-size:14px;color:var(--text2);line-height:1.55;margin-bottom:20px}
+
+.stars{display:flex;gap:8px;margin-bottom:8px}
+.s{background:none;border:none;font-size:36px;color:rgba(255,255,255,.18);cursor:pointer;padding:0;line-height:1;transition:color .1s,transform .1s}
+.s:hover{transform:scale(1.18)}
+.s.on{color:#ffb800}
+.hint{font-size:13px;color:var(--text3);min-height:18px;margin-bottom:14px}
+
+.nps-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:14px;color:#fff;resize:none;height:80px;outline:none;transition:border-color .2s;line-height:1.6;margin-bottom:16px}
+.nps-textarea::placeholder{color:rgba(255,255,255,.25)}
+.nps-textarea:focus{border-color:rgba(255,255,255,.3)}
+
+.nps-actions{display:flex;gap:10px}
+.btn-send{flex:1;border-radius:9999px;padding:13px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)}
+.btn-send.ready{background:#fff;border-color:#fff;color:#141414}
+.btn-send.ready:hover{opacity:.88}
+.btn-skip{background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:9999px;color:var(--text3);font-family:inherit;font-size:14px;padding:13px 20px;cursor:pointer;transition:all .2s}
+.btn-skip:hover{color:var(--text2);border-color:var(--border2)}
+
+.thanks{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0;text-align:center}
+.thanks-icon{font-size:36px}
+.thanks-title{font-size:17px;font-weight:600}
+.thanks-sub{font-size:14px;color:var(--text2)}
+
+.btn-to-market{width:100%;background:#fff;color:#141414;border:none;border-radius:9999px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;transition:opacity .15s}
+.btn-to-market:hover{opacity:.88}
+</style>
+</head>
+<body>
+
+<!-- ══ S1: STOREFRONT ══ -->
+<div class="screen active" id="s1">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">War Robots</div>
+      <div class="topbar-sub">Официальный хаб</div>
+    </div>
+    <div class="topbar-right">
+      <div class="account-chip"><span class="dot"></span>FM9CUY</div>
+    </div>
+  </div>
+  <div class="store-body">
+    <div class="tabs">
+      <button class="tab">Главная</button>
+      <button class="tab">АРК</button>
+      <button class="tab">Новости</button>
+      <button class="tab active">Товары</button>
+      <button class="tab">История</button>
+      <button class="tab">Подарки</button>
+    </div>
+    <div class="filters">
+      <button class="f-btn active">Limited edition</button>
+      <button class="f-btn">Special</button>
+      <button class="f-btn">Most popular</button>
+      <button class="f-btn">New</button>
+    </div>
+    <div class="section-label">Товары</div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- ══ S2: PRODUCT DETAIL ══ -->
+<div class="screen" id="s2">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s1')">←</button>
+    <div>
+      <div class="topbar-title">Покупка</div>
+      <div class="topbar-sub">War Robots</div>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-hero">
+      <div class="detail-emoji" id="d-emoji">🧊</div>
+      <div class="detail-tags" id="d-tags"></div>
+      <div class="detail-name" id="d-name">Товар</div>
+      <div class="detail-game">War Robots</div>
+    </div>
+    <div class="detail-form">
+      <div>
+        <div class="form-label">Игровой аккаунт</div>
+        <div class="account-box">
+          <div>
+            <div class="acc-label-sm">Игрок</div>
+            <div class="acc-id-lg">FM9CUY</div>
+          </div>
+          <span class="acc-change">Изменить</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="price-row">
+        <span class="plabel">Итого</span>
+        <span class="pvalue" id="d-price">1,09 $</span>
+      </div>
+      <button class="btn-primary" onclick="startProcessing()">Купить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3: PROCESSING ══ -->
+<div class="screen" id="s3">
+  <div class="processing-body">
+    <div class="big-spinner"></div>
+    <div>
+      <div class="proc-title">Обрабатываем покупку</div>
+      <div class="proc-sub">Списываем средства и зачисляем<br>товар на ваш аккаунт…</div>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="pbar"></div></div>
+  </div>
+</div>
+
+<!-- ══ S4: SUCCESS ══ -->
+<div class="screen" id="s4">
+  <div class="success-body">
+    <div class="success-game-chip">
+      <div class="chip-logo">🤖</div>
+      <span class="chip-name">War Robots</span>
+    </div>
+
+    <div class="success-product">
+      <div class="success-product-img" id="s-emoji">🧊</div>
+    </div>
+
+    <div class="success-info">
+      <div class="success-check">
+        <div class="check-icon">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="success-title">Payment successful</span>
+      </div>
+      <div class="success-sub">
+        <span id="s-name">Товар</span> has been sent to your in-game account
+      </div>
+    </div>
+
+    <button class="btn-back-market" onclick="showNps()">Back to Market</button>
+  </div>
+</div>
+
+<!-- ══ NPS OVERLAY ══ -->
+<div class="nps-overlay hidden" id="npsOverlay">
+  <div class="nps-sheet">
+    <div class="nps-img-wrap" id="npsImgWrap">
+      <img id="npsImg" src="" alt=""/>
+    </div>
+    <div class="nps-handle"></div>
+
+    <div id="npsForm">
+      <div class="nps-title">Как прошла покупка?</div>
+      <div class="nps-desc">Это займёт 10 секунд — ваш отзыв помогает нам стать лучше.</div>
+
+      <div class="stars" id="stars">
+        <button class="s" data-v="1">★</button>
+        <button class="s" data-v="2">★</button>
+        <button class="s" data-v="3">★</button>
+        <button class="s" data-v="4">★</button>
+        <button class="s" data-v="5">★</button>
+      </div>
+      <div class="hint" id="hint"></div>
+
+      <textarea class="nps-textarea" id="npsText" placeholder="Расскажите, что понравилось или что можно улучшить" style="display:none"></textarea>
+
+      <div class="nps-actions">
+        <button class="btn-send" id="btnSend" onclick="submitNps()">Отправить</button>
+        <button class="btn-skip" onclick="closeNps()">Пропустить</button>
+      </div>
+    </div>
+
+    <div id="thankState" style="display:none">
+      <div class="thanks">
+        <div class="thanks-icon">🙌</div>
+        <div class="thanks-title">Спасибо за отзыв!</div>
+        <div class="thanks-sub">Ваша оценка помогает нам делать покупки лучше.</div>
+      </div>
+      <button class="btn-to-market" onclick="closeNps()">В магазин</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Опционально: вставь URL картинки для шапки NPS (или оставь пустым) ──
+const NPS_IMAGE = "https://media.pocketgamer.com/artwork/na-36871-1730455085/hustle-castle-ios-android-7th-anniv-cover.jpg";
+// Пример: const NPS_IMAGE = "https://example.com/war-robots-banner.jpg";
+
+const PRODUCTS=[
+  {id:1,name:"100 + 150 Д-кубов",  price:"1,09 $", emoji:"🧊",tags:["ltd"],offer:"ONE-TIME OFFER ×2.5"},
+  {id:2,name:"500 + 500 Д-кубов",  price:"4,99 $", emoji:"🧊",tags:["ltd"],offer:"ONE-TIME OFFER ×2"},
+  {id:3,name:"100 Thorium",         price:"0,10 $", emoji:"⚗️",tags:["ltd","corp"]},
+  {id:4,name:"50 Д-кубов",          price:"1,00 $", emoji:"🧊",tags:["spc","corp"]},
+  {id:5,name:"1500 + 75 Д-кубов",  price:"15,99 $",emoji:"🧊",tags:["pop"],bonus:"+5%"},
+  {id:6,name:"30000 + 1500 Д-кубов",price:"314,99 $",emoji:"💎",bonus:"+5%"},
+  {id:7,name:"10000 + 500 Д-кубов",price:"104,99 $",emoji:"💎",bonus:"+5%"},
+  {id:8,name:"4500 + 225 Д-кубов", price:"45,99 $",emoji:"🧊",bonus:"+5%"},
+  {id:9,name:"2500 + 125 Д-кубов", price:"25,99 $",emoji:"🧊",bonus:"+5%"},
+  {id:10,name:"750 + 37 Д-кубов",  price:"7,99 $", emoji:"🧊",bonus:"+5%"},
+  {id:11,name:"500 D-Gems",         price:"4,99 $", emoji:"💎",tags:["corp"],bonus:"+5%"},
+  {id:12,name:"500 Д-кубов",        price:"4,99 $", emoji:"🧊"},
+];
+const TL={ltd:"Limited Edition",spc:"Special",pop:"Most Popular",corp:"CORP"};
+const TC={ltd:"dtag-ltd",spc:"dtag-ltd",pop:"dtag-pop",corp:"dtag-corp"};
+const CTC={ltd:"tag-ltd",spc:"tag-spc",pop:"tag-pop"};
+const HINTS=["","Очень плохо","Плохо","Нормально","Хорошо","Отлично!"];
+let rating=0;
+
+// render grid
+const grid=document.getElementById("grid");
+PRODUCTS.forEach(p=>{
+  const primary=p.tags?.find(t=>t!=="corp");
+  const hasCorp=p.tags?.includes("corp");
+  const el=document.createElement("div");
+  el.className="card";
+  el.onclick=()=>openProduct(p);
+  el.innerHTML=`
+    <div class="card-img">
+      ${primary?`<span class="tag ${CTC[primary]}">${TL[primary]}</span>`:""}
+      ${hasCorp&&primary?`<span class="tag tag-corp tag-corp-rb">CORP</span>`:""}
+      ${hasCorp&&!primary?`<span class="tag tag-corp tag-corp-lt">CORP</span>`:""}
+      ${p.emoji}
+      ${p.offer?`<span class="offer-tag">${p.offer}</span>`:""}
+      ${p.bonus?`<span class="bonus-tag">${p.bonus}</span>`:""}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${p.name}</div>
+      <span class="price-pill">${p.price}</span>
+    </div>`;
+  grid.appendChild(el);
+});
+
+function openProduct(p){
+  document.getElementById("d-emoji").textContent=p.emoji;
+  document.getElementById("d-name").textContent=p.name;
+  document.getElementById("d-price").textContent=p.price;
+  document.getElementById("d-tags").innerHTML=(p.tags||[]).map(t=>`<span class="dtag ${TC[t]}">${TL[t]}</span>`).join("");
+  document.getElementById("s-emoji").textContent=p.emoji;
+  document.getElementById("s-name").textContent=p.name;
+  go("s2");
+}
+
+function startProcessing(){
+  go("s3");
+  const pb=document.getElementById("pbar");
+  pb.style.transition="none"; pb.style.width="0";
+  pb.offsetHeight;
+  pb.style.transition="width 5s linear"; pb.style.width="100%";
+  setTimeout(()=>go("s4"),5000);
+}
+
+// NPS overlay
+function showNps(){
+  rating=0; paintStars(0);
+  document.getElementById("hint").textContent="";
+  document.getElementById("npsText").style.display="none";
+  document.getElementById("npsText").value="";
+  document.getElementById("btnSend").className="btn-send";
+  document.getElementById("npsForm").style.display="";
+  document.getElementById("thankState").style.display="none";
+  // image header
+  const wrap=document.getElementById("npsImgWrap");
+  if(NPS_IMAGE){
+    document.getElementById("npsImg").src=NPS_IMAGE;
+    wrap.classList.add("has-img");
+  } else {
+    wrap.classList.remove("has-img");
+  }
+  document.getElementById("npsOverlay").classList.remove("hidden");
+}
+function closeNps(){
+  document.getElementById("npsOverlay").classList.add("hidden");
+  go("s1");
+}
+
+// stars
+document.querySelectorAll(".s").forEach(s=>{
+  s.addEventListener("mouseenter",()=>paintStars(+s.dataset.v));
+  s.addEventListener("mouseleave",()=>paintStars(rating));
+  s.addEventListener("click",()=>{
+    rating=+s.dataset.v;
+    paintStars(rating);
+    document.getElementById("hint").textContent=HINTS[rating];
+    document.getElementById("npsText").style.display="";
+    document.getElementById("btnSend").classList.add("ready");
+  });
+});
+function paintStars(n){
+  document.querySelectorAll(".s").forEach(s=>s.classList.toggle("on",+s.dataset.v<=n));
+}
+function submitNps(){
+  if(!rating)return;
+  document.getElementById("npsForm").style.display="none";
+  document.getElementById("thankState").style.display="";
+}
+
+// close overlay on backdrop tap
+document.getElementById("npsOverlay").addEventListener("click",e=>{
+  if(e.target.id==="npsOverlay") closeNps();
+});
+
+function go(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",function(){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  this.classList.add("active");
+}));
+document.querySelectorAll(".f-btn").forEach(b=>b.addEventListener("click",function(){
+  document.querySelectorAll(".f-btn").forEach(x=>x.classList.remove("active"));
+  this.classList.add("active");
+}));
+</script>
+</body>
+</html>
