@@ -41,7 +41,9 @@ type PostOrderNpsResponse = {
 
 Обновить `user_nps_eligibility`:
 - `last_submitted_at = NOW()`
-- `cooldown_until = NOW() + INTERVAL '90 days'`
+
+> Cooldown уже активирован фактом показа (через `POST /api/users/nps/impression/`).
+> Повторно перезаписывать `cooldown_until` при отправке не нужно.
 
 ---
 
@@ -112,8 +114,9 @@ type NpsIneligibilityReason =
 | Минимум заказов | Не менее 2 оплаченных заказов всего |
 | Cooldown | Определяется стратегией опроса (см. ниже) |
 
-> **Cooldown от показа, не от отправки.** Нажал «Пропустить» — cooldown уже идёт.
-> Иначе мы наказываем пользователя за skip.
+> **Cooldown от показа, не от отправки — для всех пользователей.**
+> Шторка появилась → `POST /api/users/nps/impression/` срабатывает немедленно → cooldown пошёл.
+> Пропустил, заполнил, закрыл — неважно: 90 дней уже считаются.
 
 ### Стратегии cooldown
 
@@ -192,6 +195,12 @@ type NpsIneligibilityReason =
 ```sql
 -- Добавить колонку для аналитики (корреляция суммы и рейтинга)
 ALTER TABLE order_nps ADD COLUMN order_value_usd NUMERIC(10,2);
+
+-- Удалить избыточные поля:
+-- user_id: достаётся через JOIN orders ON orders.id = order_nps.order_id
+-- showcase_id: не используется
+ALTER TABLE order_nps DROP COLUMN user_id;
+ALTER TABLE order_nps DROP COLUMN showcase_id;
 ```
 
 Полная схема:
@@ -200,8 +209,6 @@ ALTER TABLE order_nps ADD COLUMN order_value_usd NUMERIC(10,2);
 CREATE TABLE order_nps (
   id              SERIAL PRIMARY KEY,
   order_id        INTEGER NOT NULL REFERENCES orders(id),
-  user_id         INTEGER NOT NULL REFERENCES users(id),
-  showcase_id     INTEGER REFERENCES showcases(id),
   rating          SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment         TEXT,
   order_value_usd NUMERIC(10,2),
@@ -210,6 +217,10 @@ CREATE TABLE order_nps (
 
 CREATE UNIQUE INDEX order_nps_unique_order ON order_nps(order_id);
 ```
+
+> **`user_id` не хранится** — он уже есть на заказе. Отзыв может оставить только автор заказа
+> (проверяется через `orders.user_id = current_user`), дублировать его в `order_nps` нет смысла.
+> Для аналитических запросов достаточно `JOIN orders USING (order_id)`.
 
 ### Новая таблица `user_nps_eligibility`
 
@@ -241,14 +252,14 @@ CREATE UNIQUE INDEX user_nps_eligibility_user ON user_nps_eligibility(user_id);
 INSERT INTO user_nps_eligibility
   (user_id, last_submitted_at, cooldown_until, total_paid_orders)
 SELECT
-  n.user_id,
+  o.user_id,
   MAX(n.created_at),
   MAX(n.created_at) + INTERVAL '90 days',
-  (SELECT COUNT(*) FROM orders o
-   WHERE o.user_id = n.user_id AND o.status = 'paid')
+  (SELECT COUNT(*) FROM orders o2
+   WHERE o2.user_id = o.user_id AND o2.status = 'paid')
 FROM order_nps n
-WHERE n.user_id IS NOT NULL
-GROUP BY n.user_id
+JOIN orders o ON o.id = n.order_id
+GROUP BY o.user_id
 ON CONFLICT (user_id) DO NOTHING;
 ```
 
@@ -379,7 +390,6 @@ GET /api/nps/?target=/banner/feature/  → другой конфиг, страт
 
 ## Вопросы, которые стоит обсудить до реализации
 
-1. **Хранить `showcase_id`?** — полезно для аналитики по конкретным играм
-2. **Аналитика** — нужен ли отдельный Grafana/BI дашборд или достаточно выгрузки из БД?
-3. **Локализация комментария** — сохранять язык пользователя вместе с комментарием?
-4. **Порог суммы $0.50** — скорректировать под реальный ценовой диапазон каталога?
+1. **Аналитика** — нужен ли отдельный Grafana/BI дашборд или достаточно выгрузки из БД?
+2. **Локализация комментария** — сохранять язык пользователя вместе с комментарием?
+3. **Порог суммы $0.50** — скорректировать под реальный ценовой диапазон каталога?
