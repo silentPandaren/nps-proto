@@ -67,7 +67,7 @@ type NpsIneligibilityReason =
   | "already_submitted"           // NPS по этому заказу уже отправлен
   | "order_too_old"               // заказ старше 7 дней
   | "ineligible_product"          // заказ не оплачен или бесплатный
-  | "order_value_too_low"         // сумма заказа < $0.50
+  | "order_value_too_low"         // сумма заказа < $1.00
   | "cooldown_active"             // 90-дневный cooldown ещё не истёк (только авторизованные)
   | "insufficient_order_history"; // меньше 2 оплаченных заказов (только авторизованные)
 ```
@@ -104,7 +104,7 @@ type NpsIneligibilityReason =
 |---------|----------|
 | Заказ оплачен | `status = paid` и `isFreeOrder = false` |
 | Окно показа | Заказ создан не позднее 7 дней назад |
-| Минимальная сумма | Заказ ≥ $0.50 (исключает микротранзакции) |
+| Минимальная сумма | Заказ ≥ $1.00 (исключает микротранзакции и тестовые покупки) |
 | Один NPS на заказ | Повторная отправка → `409`, eligibility → `already_submitted` |
 
 ### Дополнительные правила только для авторизованных (бэкенд)
@@ -160,7 +160,7 @@ type NpsIneligibilityReason =
      ├─ заказ существует?
      ├─ status = paid, isFreeOrder = false?
      ├─ created_at >= NOW() - 7 days?
-     └─ total_usd >= 0.50?
+     └─ total_usd >= 1.00?
      → любое нет → { shouldShow: false, reason: ... }
 
   2. DEDUP CHECK (order_nps):
@@ -372,6 +372,111 @@ export const postNpsImpression = () => {
 
 ---
 
+## Аналитика
+
+### API для аналитиков
+
+Read-only эндпоинт для выгрузки данных в Superset (или любой другой BI-инструмент).
+Требует внутренней авторизации (service token / IP whitelist).
+
+```
+GET /api/internal/nps/responses/
+```
+
+**Query params**
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `from` | `YYYY-MM-DD` | Начало периода (по `created_at`) |
+| `to` | `YYYY-MM-DD` | Конец периода |
+| `rating` | `1,2,3,4,5` | Фильтр по оценкам (через запятую) |
+| `has_comment` | `bool` | Только с комментарием / без |
+| `page` | `int` | Страница (default: 1) |
+| `limit` | `int` | Записей на страницу (max: 1000, default: 500) |
+
+**Response `200 OK`**
+
+```typescript
+type InternalNpsResponsesResponse = {
+  total: number;
+  page: number;
+  results: Array<{
+    id: number;
+    order_id: number;
+    rating: 1 | 2 | 3 | 4 | 5;
+    comment: string | null;
+    order_value_usd: number | null;
+    // classification — null если ещё не обработан
+    topic: "payment" | "delivery" | "price" | "ui" | "other" | null;
+    sentiment: "positive" | "neutral" | "negative" | null;
+    created_at: string; // ISO 8601
+  }>;
+};
+```
+
+### Автоматическая классификация комментариев
+
+Ночной cron-job батчами обрабатывает новые комментарии через Claude API и записывает результат в `order_nps_analysis`.
+
+**Новая таблица `order_nps_analysis`**
+
+```sql
+CREATE TABLE order_nps_analysis (
+  id           SERIAL PRIMARY KEY,
+  nps_id       INTEGER NOT NULL REFERENCES order_nps(id),
+  topic        TEXT NOT NULL,    -- payment | delivery | price | ui | other
+  sentiment    TEXT NOT NULL,    -- positive | neutral | negative
+  is_anomaly   BOOLEAN NOT NULL DEFAULT FALSE, -- рейтинг противоречит тональности
+  processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX order_nps_analysis_nps ON order_nps_analysis(nps_id);
+```
+
+**Pipeline (запускается раз в сутки)**
+
+```python
+# Псевдокод
+comments = db.query("""
+    SELECT n.id, n.rating, n.comment
+    FROM order_nps n
+    LEFT JOIN order_nps_analysis a ON a.nps_id = n.id
+    WHERE n.comment IS NOT NULL AND a.id IS NULL
+""")
+
+if not comments:
+    exit()
+
+response = claude.messages.create(
+    model="claude-opus-4-6",
+    messages=[{
+        "role": "user",
+        "content": f"""
+Classify each comment. Return a JSON array with objects:
+{{"id": <id>, "topic": <topic>, "sentiment": <sentiment>, "is_anomaly": <bool>}}
+
+Topics: payment, delivery, price, ui, other
+Sentiment: positive, neutral, negative
+is_anomaly: true if rating contradicts sentiment (e.g. rating=5 but negative text)
+
+Comments:
+{format_for_prompt(comments)}
+        """
+    }]
+)
+
+db.bulk_insert("order_nps_analysis", parse_json(response))
+```
+
+Claude обрабатывает комментарии на любом языке — отдельное хранение языка не нужно.
+
+**Что получают аналитики в Superset:**
+- Распределение тем: «60% комментариев про оплату»
+- Аномалии: высокий рейтинг + негативный текст (и наоборот)
+- Динамика NPS по времени с разбивкой по темам
+
+---
+
 ## Архитектурные решения на будущее
 
 **Generic Survey API** — когда появится второй NPS-контекст (доставка, фича, бронирование и т.д.),
@@ -388,8 +493,10 @@ GET /api/nps/?target=/banner/feature/  → другой конфиг, страт
 
 ---
 
-## Вопросы, которые стоит обсудить до реализации
+## Принятые решения
 
-1. **Аналитика** — нужен ли отдельный Grafana/BI дашборд или достаточно выгрузки из БД?
-2. **Локализация комментария** — сохранять язык пользователя вместе с комментарием?
-3. **Порог суммы $0.50** — скорректировать под реальный ценовой диапазон каталога?
+| Вопрос | Решение |
+|--------|---------|
+| Аналитика | `GET /api/internal/nps/responses/` для Superset + ночная LLM-классификация комментариев |
+| Язык комментария | Не хранить — Claude обрабатывает любой язык без подсказок |
+| Порог суммы | $1.00 — фильтрует тестовые микротранзакции (Thorium $0.10), сохраняет все осмысленные покупки |
