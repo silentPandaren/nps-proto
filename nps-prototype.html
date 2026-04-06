@@ -288,7 +288,7 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
       </div>
     </div>
 
-    <button class="btn-back-market" onclick="showNps()">Back to Market</button>
+    <button class="btn-back-market" onclick="onBackToMarket()">Back to Market</button>
   </div>
 </div>
 
@@ -400,7 +400,40 @@ function startProcessing(){
   setTimeout(()=>go("s4"),3000);
 }
 
-// NPS overlay
+// ── NPS eligibility ──────────────────────────────────────────────────────────
+
+// В реальном приложении заменить на проверку сессии/токена
+function isAuthenticated(){ return false; }
+
+const NPS_COOLDOWN_DAYS = 90;
+
+function isNpsCookieCooldownActive(){
+  const m = document.cookie.match(/nps_shown_at=(\d+)/);
+  if(!m) return false;
+  return (Date.now() - Number(m[1])) / 86400000 < NPS_COOLDOWN_DAYS;
+}
+
+function setNpsCookie(){
+  const expires = new Date(Date.now() + NPS_COOLDOWN_DAYS * 86400000).toUTCString();
+  document.cookie = `nps_shown_at=${Date.now()}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+async function onBackToMarket(){
+  // Анонимы: проверяем куку до вызова API
+  if(!isAuthenticated() && isNpsCookieCooldownActive()){
+    go("s1");
+    return;
+  }
+
+  // В реальном приложении: GET /api/orders/{orderId}/nps/eligibility/
+  // Для прототипа симулируем ответ — всегда показываем
+  const shouldShow = true;
+
+  if(shouldShow) showNps();
+  else go("s1");
+}
+
+// ── NPS overlay ───────────────────────────────────────────────────────────────
 function showNps(){
   rating=0; paintStars(0);
   document.getElementById("hint").textContent="";
@@ -418,10 +451,27 @@ function showNps(){
     wrap.classList.remove("has-img");
   }
   document.getElementById("npsOverlay").classList.remove("hidden");
+
+  // Записать факт показа (активирует cooldown)
+  if(!isAuthenticated()){
+    setNpsCookie();
+  } else {
+    // POST /api/users/nps/impression/ — fire-and-forget
+    fetch("/api/users/nps/impression/", {
+      method: "POST",
+      credentials: "include",
+      headers: { "X-CSRFToken": getCsrfToken() }
+    }).catch(()=>{});
+  }
 }
 function closeNps(){
   document.getElementById("npsOverlay").classList.add("hidden");
   go("s1");
+}
+
+function getCsrfToken(){
+  const m = document.cookie.match(/csrftoken=([^;]+)/);
+  return m ? m[1] : "";
 }
 
 // stars

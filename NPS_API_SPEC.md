@@ -37,49 +37,202 @@ type PostOrderNpsResponse = {
 | `404` | Заказ не найден |
 | `409` | NPS по этому заказу уже был отправлен |
 
+**Side effects** (только для авторизованных пользователей)
+
+Обновить `user_nps_eligibility`:
+- `last_submitted_at = NOW()`
+- `cooldown_until = NOW() + INTERVAL '90 days'`
+
 ---
 
 ### GET `/api/orders/{order_id}/nps/eligibility/`
 
 Проверить, нужно ли показывать NPS для данного заказа.
-Вызывается фронтендом при переходе на экран успеха.
+Вызывается фронтендом при нажатии «Back to Market».
+
+> **Для анонимных пользователей** фронтенд проверяет куку `nps_shown_at` до вызова этого эндпоинта.
+> Если кука есть и cooldown не истёк — API не вызывается вообще.
 
 **Response `200 OK`**
 
 ```typescript
 type GetOrderNpsEligibilityResponse = {
   shouldShow: boolean;
-  reason?: "already_submitted" | "order_too_old" | "ineligible_product";
+  reason?: NpsIneligibilityReason;
 };
+
+type NpsIneligibilityReason =
+  | "already_submitted"           // NPS по этому заказу уже отправлен
+  | "order_too_old"               // заказ старше 7 дней
+  | "ineligible_product"          // заказ не оплачен или бесплатный
+  | "order_value_too_low"         // сумма заказа < $0.50
+  | "cooldown_active"             // 90-дневный cooldown ещё не истёк (только авторизованные)
+  | "insufficient_order_history"; // меньше 2 оплаченных заказов (только авторизованные)
 ```
 
 ---
 
-## Бизнес-логика (для бэкенда)
+### POST `/api/users/nps/impression/`
 
-| Правило | Значение |
-|---------|----------|
-| Один NPS на заказ | Повторная отправка → `409` |
-| Окно показа | Только если заказ создан не позднее 7 дней назад |
-| Типы заказов | Только успешно оплаченные (`isFreeOrder: true` или статус `paid`) |
-| Анонимные пользователи | Не показывать |
+Зафиксировать факт показа NPS bottom sheet авторизованному пользователю.
+Фронтенд вызывает fire-and-forget сразу после отрисовки шторки.
+
+**Требует авторизации.** `401` если не авторизован — фронтенд игнорирует.
+
+**Response `204 No Content`**
+
+**Side effects**
+
+Обновить `user_nps_eligibility`:
+- `last_shown_at = NOW()`
+- `cooldown_until = NOW() + INTERVAL '90 days'`
+
+> **Почему отдельный эндпоинт, а не side effect в GET?**
+> GET не должен иметь side effects (REST). Разделение позволяет отличить «проверил» от «показал» для аналитики и A/B тестов.
 
 ---
 
-## Модель данных (для бэкенда)
+## Бизнес-логика
+
+### Правила для всех пользователей (бэкенд)
+
+| Правило | Значение |
+|---------|----------|
+| Заказ оплачен | `status = paid` и `isFreeOrder = false` |
+| Окно показа | Заказ создан не позднее 7 дней назад |
+| Минимальная сумма | Заказ ≥ $0.50 (исключает микротранзакции) |
+| Один NPS на заказ | Повторная отправка → `409`, eligibility → `already_submitted` |
+
+### Дополнительные правила только для авторизованных (бэкенд)
+
+| Правило | Значение |
+|---------|----------|
+| Минимум заказов | Не менее 2 оплаченных заказов всего |
+| Cooldown | 90 дней с момента последнего **показа** (не отправки) |
+
+> **Cooldown от показа, не от отправки.** Нажал «Пропустить» — 90 дней уже идут.
+> Иначе мы наказываем пользователя за skip.
+
+### Правила для анонимных пользователей (фронтенд)
+
+| Правило | Как реализовано |
+|---------|-----------------|
+| Cooldown 90 дней | Кука `nps_shown_at` (timestamp). Проверяется до вызова eligibility API. |
+
+Анонимы не проходят user-level проверки на бэкенде — бэкенд доверяет факту вызова API
+(кука уже проверена на фронте). Cooldown через куку достаточен: если пользователь очистит куку —
+это его выбор, идеальная защита здесь не нужна.
+
+---
+
+## Pipeline проверки eligibility
+
+```
+[ФРОНТ] При нажатии "Back to Market":
+  └─ пользователь анонимный?
+       └─ кука nps_shown_at есть и < 90 дней?
+            → ДА: не показывать NPS, перейти в магазин
+            → НЕТ: вызвать GET eligibility
+
+[БЭКЕНД] GET /api/orders/{order_id}/nps/eligibility/:
+
+  1. ORDER QUERY (один запрос к БД):
+     ├─ заказ существует?
+     ├─ status = paid, isFreeOrder = false?
+     ├─ created_at >= NOW() - 7 days?
+     └─ total_usd >= 0.50?
+     → любое нет → { shouldShow: false, reason: ... }
+
+  2. DEDUP CHECK (order_nps):
+     └─ нет строки WHERE order_id = ?
+     → есть → { shouldShow: false, reason: "already_submitted" }
+
+  3. AUTH BRANCH:
+     └─ анонимный (userId = null)?
+          → { shouldShow: true }
+
+     └─ авторизованный?
+          → USER STATE (user_nps_eligibility, O(1) по PK):
+            ├─ total_paid_orders >= 2?
+            │   → нет → { shouldShow: false, reason: "insufficient_order_history" }
+            └─ cooldown_until IS NULL OR cooldown_until < NOW()?
+                → нет → { shouldShow: false, reason: "cooldown_active" }
+            → { shouldShow: true }
+
+[ФРОНТ] После показа шторки:
+  └─ анонимный → SET cookie nps_shown_at=<timestamp>, expires=90 дней
+  └─ авторизованный → POST /api/users/nps/impression/ (fire-and-forget)
+```
+
+Итого: 2 DB round-trip для анонимов, 3 для авторизованных.
+
+---
+
+## Модель данных
+
+### Существующая таблица `order_nps` (изменения)
+
+```sql
+-- Добавить колонку для аналитики (корреляция суммы и рейтинга)
+ALTER TABLE order_nps ADD COLUMN order_value_usd NUMERIC(10,2);
+```
+
+Полная схема:
 
 ```sql
 CREATE TABLE order_nps (
-  id           SERIAL PRIMARY KEY,
-  order_id     INTEGER NOT NULL REFERENCES orders(id),
-  user_id      INTEGER NOT NULL REFERENCES users(id),
-  showcase_id  INTEGER REFERENCES showcases(id),
-  rating       SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  comment      TEXT,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id              SERIAL PRIMARY KEY,
+  order_id        INTEGER NOT NULL REFERENCES orders(id),
+  user_id         INTEGER NOT NULL REFERENCES users(id),
+  showcase_id     INTEGER REFERENCES showcases(id),
+  rating          SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment         TEXT,
+  order_value_usd NUMERIC(10,2),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX order_nps_unique_order ON order_nps(order_id);
+```
+
+### Новая таблица `user_nps_eligibility`
+
+Трекинг cooldown и истории показов для авторизованных пользователей.
+
+```sql
+CREATE TABLE user_nps_eligibility (
+  id                  SERIAL PRIMARY KEY,
+  user_id             INTEGER NOT NULL REFERENCES users(id),
+  last_shown_at       TIMESTAMPTZ,                        -- когда последний раз ПОКАЗАЛИ
+  last_submitted_at   TIMESTAMPTZ,                        -- когда последний раз отправили рейтинг
+  total_paid_orders   INTEGER NOT NULL DEFAULT 0,         -- денормализованный счётчик заказов
+  cooldown_until      TIMESTAMPTZ,                        -- дата окончания cooldown
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX user_nps_eligibility_user ON user_nps_eligibility(user_id);
+```
+
+**`total_paid_orders` — денормализация.** Инкрементируется событием post-order (очередь или DB trigger).
+Считать `COUNT(*)` на каждую проверку дорого для активных пользователей.
+
+### Миграция существующих данных
+
+При деплое: бэкфиллить `user_nps_eligibility` из существующих `order_nps`:
+
+```sql
+INSERT INTO user_nps_eligibility
+  (user_id, last_submitted_at, cooldown_until, total_paid_orders)
+SELECT
+  n.user_id,
+  MAX(n.created_at),
+  MAX(n.created_at) + INTERVAL '90 days',
+  (SELECT COUNT(*) FROM orders o
+   WHERE o.user_id = n.user_id AND o.status = 'paid')
+FROM order_nps n
+WHERE n.user_id IS NOT NULL
+GROUP BY n.user_id
+ON CONFLICT (user_id) DO NOTHING;
 ```
 
 ---
@@ -97,6 +250,22 @@ export type PostOrderNpsRequest = {
 
 export type PostOrderNpsResponse = {
   id: number;
+};
+```
+
+**`src/api/market-api/get-order-nps-eligibility/types.ts`**
+```typescript
+export type NpsIneligibilityReason =
+  | "already_submitted"
+  | "order_too_old"
+  | "ineligible_product"
+  | "order_value_too_low"
+  | "cooldown_active"
+  | "insufficient_order_history";
+
+export type GetOrderNpsEligibilityResponse = {
+  shouldShow: boolean;
+  reason?: NpsIneligibilityReason;
 };
 ```
 
@@ -119,9 +288,24 @@ export const postOrderNps = async (
 };
 ```
 
+**`src/api/market-api/post-nps-impression/endpoints.ts`**
+```typescript
+import { getCsrfToken, kyFetchMarketApi } from "@/api/common";
+
+// Fire-and-forget: вызывать без await, ошибки игнорировать
+export const postNpsImpression = () => {
+  kyFetchMarketApi
+    .post("api/users/nps/impression/", {
+      credentials: "include",
+      headers: { "X-Csrftoken": getCsrfToken() },
+    })
+    .catch(() => {});
+};
+```
+
 ---
 
-## Флоу
+## Флоу (обновлённый)
 
 ```
 Экран успеха
@@ -129,16 +313,25 @@ export const postOrderNps = async (
      ▼
 [Back to Market]
      │
+     ├─► Аноним: проверить куку nps_shown_at
+     │         │
+     │    cooldown активен ──► перейти в магазин
+     │         │
+     │    cooldown истёк / нет куки
+     │         │
      ├─► GET /api/orders/{id}/nps/eligibility/
      │         │
-     │    shouldShow: false ──► редирект в магазин
+     │    shouldShow: false ──► перейти в магазин
      │         │
      │    shouldShow: true
      │         │
      ▼         ▼
    Показать NPS bottom sheet
      │
-     ├─► [Пропустить] ──► редирект в магазин
+     ├─► Аноним: SET cookie nps_shown_at (90 дней)
+     ├─► Авторизован: POST /api/users/nps/impression/ (fire-and-forget)
+     │
+     ├─► [Пропустить] ──► перейти в магазин
      │
      └─► [Отправить]
            │
@@ -146,7 +339,7 @@ export const postOrderNps = async (
      POST /api/orders/{id}/nps/
            │
            ▼
-     Thank you state → редирект в магазин
+     Thank you state → перейти в магазин
 ```
 
 ---
@@ -154,6 +347,6 @@ export const postOrderNps = async (
 ## Вопросы, которые стоит обсудить до реализации
 
 1. **Хранить `showcase_id`?** — полезно для аналитики по конкретным играм
-2. **Нужен ли GET eligibility?** — можно упростить: всегда показывать, дублирование защищать только на `POST`
-3. **Аналитика** — нужен ли отдельный Grafana/BI дашборд или достаточно выгрузки из БД?
-4. **Локализация комментария** — сохранять язык пользователя вместе с комментарием?
+2. **Аналитика** — нужен ли отдельный Grafana/BI дашборд или достаточно выгрузки из БД?
+3. **Локализация комментария** — сохранять язык пользователя вместе с комментарием?
+4. **Порог суммы $0.50** — скорректировать под реальный ценовой диапазон каталога?
