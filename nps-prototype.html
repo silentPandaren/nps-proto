@@ -180,6 +180,39 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 
 .btn-to-market{width:100%;background:#fff;color:#141414;border:none;border-radius:9999px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;transition:opacity .15s}
 .btn-to-market:hover{opacity:.88}
+
+/* ══════════════════════════════
+   PROTOTYPE SETTINGS
+══════════════════════════════ */
+.settings-fab{position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:18px;transition:all .15s;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.settings-fab:hover{background:#2e2e2e;color:var(--text);transform:translateY(-1px)}
+.settings-fab:active{transform:scale(.94)}
+
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);animation:overlayIn .22s ease}
+.settings-overlay.hidden{display:none}
+.settings-sheet{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:440px;padding:24px;animation:sheetUp .25s cubic-bezier(.32,.72,0,1)}
+.settings-title{font-size:17px;font-weight:600;margin-bottom:4px}
+.settings-subt{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:20px}
+
+.set-section{margin-bottom:16px}
+.set-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.set-row{display:flex;gap:8px;align-items:center}
+.set-input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;color:#fff;outline:none;transition:border-color .15s}
+.set-input::placeholder{color:rgba(255,255,255,.25)}
+.set-input:focus{border-color:rgba(255,255,255,.3)}
+
+.btn-set{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:10px 14px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-set:hover{background:rgba(255,255,255,.13)}
+.btn-set:active{transform:scale(.97)}
+.btn-set.ghost{background:transparent;color:var(--text3)}
+.btn-set.ghost:hover{color:var(--text2);background:rgba(255,255,255,.04)}
+
+.set-preview{margin-top:6px;border-radius:8px;overflow:hidden;border:1px solid var(--border);height:120px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px}
+.set-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.set-error{font-size:12px;color:#e74c3c;margin-top:8px;min-height:16px}
+
+.set-actions{display:flex;gap:8px;margin-top:20px}
+.set-actions .btn-set{flex:1}
 </style>
 </head>
 <body>
@@ -332,10 +365,48 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
   </div>
 </div>
 
+<!-- ══ PROTOTYPE SETTINGS (NPS image) ══ -->
+<button class="settings-fab" onclick="openSettings()" title="Настройки прототипа" aria-label="Настройки">⚙</button>
+
+<div class="settings-overlay hidden" id="settingsOverlay">
+  <div class="settings-sheet">
+    <div class="settings-title">Картинка опроса</div>
+    <div class="settings-subt">Шапка NPS-опроса. Вставьте ссылку или загрузите файл с устройства.</div>
+
+    <div class="set-section">
+      <div class="set-label">URL картинки</div>
+      <div class="set-row">
+        <input class="set-input" id="setImgUrl" type="url" placeholder="https://…">
+        <button class="btn-set" onclick="applyImageUrl()">Применить</button>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <div class="set-label">Или с устройства</div>
+      <div class="set-row">
+        <button class="btn-set" onclick="document.getElementById('setImgFile').click()">Выбрать файл…</button>
+        <input type="file" id="setImgFile" accept="image/*" style="display:none" onchange="applyImageFile(event)">
+      </div>
+      <div class="set-error" id="setError"></div>
+    </div>
+
+    <div class="set-label">Предпросмотр</div>
+    <div class="set-preview" id="setPreview"></div>
+
+    <div class="set-actions">
+      <button class="btn-set ghost" onclick="resetImage()">Сбросить</button>
+      <button class="btn-set" onclick="closeSettings()">Готово</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── Опционально: вставь URL картинки для шапки NPS (или оставь пустым) ──
-const NPS_IMAGE = "https://media.pocketgamer.com/artwork/na-36871-1730455085/hustle-castle-ios-android-7th-anniv-cover.jpg";
-// Пример: const NPS_IMAGE = "https://example.com/war-robots-banner.jpg";
+// ── Картинка для шапки NPS — дефолт. Можно переопределить через ⚙ (хранится в localStorage). ──
+const NPS_IMAGE_DEFAULT = "https://media.pocketgamer.com/artwork/na-36871-1730455085/hustle-castle-ios-android-7th-anniv-cover.jpg";
+
+function getNpsImage(){
+  return localStorage.getItem("nps_image_override") || NPS_IMAGE_DEFAULT;
+}
 
 const PRODUCTS=[
   {id:1,name:"100 + 150 Д-кубов",  price:"1,09 $", emoji:"🧊",tags:["ltd"],offer:"ONE-TIME OFFER ×2.5"},
@@ -444,8 +515,9 @@ function showNps(){
   document.getElementById("thankState").style.display="none";
   // image header
   const wrap=document.getElementById("npsImgWrap");
-  if(NPS_IMAGE){
-    document.getElementById("npsImg").src=NPS_IMAGE;
+  const npsImage=getNpsImage();
+  if(npsImage){
+    document.getElementById("npsImg").src=npsImage;
     wrap.classList.add("has-img");
   } else {
     wrap.classList.remove("has-img");
@@ -498,6 +570,79 @@ function submitNps(){
 // close overlay on backdrop tap
 document.getElementById("npsOverlay").addEventListener("click",e=>{
   if(e.target.id==="npsOverlay") closeNps();
+});
+
+// ── Settings: NPS image override ─────────────────────────────────────────────
+function openSettings(){
+  const cur = getNpsImage();
+  const stored = localStorage.getItem("nps_image_override") || "";
+  document.getElementById("setImgUrl").value = stored.startsWith("data:") ? "" : stored;
+  document.getElementById("setError").textContent = "";
+  updatePreview(cur);
+  document.getElementById("settingsOverlay").classList.remove("hidden");
+}
+function closeSettings(){
+  document.getElementById("settingsOverlay").classList.add("hidden");
+}
+function updatePreview(src){
+  const p = document.getElementById("setPreview");
+  if(src){
+    p.innerHTML = `<img src="${src}" alt="">`;
+  } else {
+    p.textContent = "Нет картинки";
+  }
+}
+function applyImageUrl(){
+  const url = document.getElementById("setImgUrl").value.trim();
+  document.getElementById("setError").textContent = "";
+  if(!url){
+    localStorage.removeItem("nps_image_override");
+    updatePreview(NPS_IMAGE_DEFAULT);
+    return;
+  }
+  try {
+    localStorage.setItem("nps_image_override", url);
+    updatePreview(url);
+  } catch(err){
+    document.getElementById("setError").textContent = "Не удалось сохранить ссылку.";
+  }
+}
+function applyImageFile(e){
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ""; // allow re-picking the same file later
+  if(!file) return;
+  const errEl = document.getElementById("setError");
+  errEl.textContent = "";
+  if(!file.type.startsWith("image/")){
+    errEl.textContent = "Файл должен быть картинкой.";
+    return;
+  }
+  if(file.size > 4 * 1024 * 1024){
+    errEl.textContent = "Файл слишком большой (макс. 4 МБ).";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    try {
+      localStorage.setItem("nps_image_override", dataUrl);
+      document.getElementById("setImgUrl").value = "";
+      updatePreview(dataUrl);
+    } catch(err){
+      errEl.textContent = "Не удалось сохранить — возможно, превышен лимит хранилища.";
+    }
+  };
+  reader.onerror = () => { errEl.textContent = "Не удалось прочитать файл."; };
+  reader.readAsDataURL(file);
+}
+function resetImage(){
+  localStorage.removeItem("nps_image_override");
+  document.getElementById("setImgUrl").value = "";
+  document.getElementById("setError").textContent = "";
+  updatePreview(NPS_IMAGE_DEFAULT);
+}
+document.getElementById("settingsOverlay").addEventListener("click", e => {
+  if(e.target.id === "settingsOverlay") closeSettings();
 });
 
 function go(id){
