@@ -129,29 +129,24 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 /* ══════════════════════════════
    NPS OVERLAY
 ══════════════════════════════ */
-.nps-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(6px);animation:overlayIn .25s ease}
+.nps-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);animation:overlayIn .25s ease}
 .nps-overlay.hidden{display:none}
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
 
-.nps-sheet{background:var(--surface);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:24px 24px 40px;animation:sheetUp .3s cubic-bezier(.32,.72,0,1)}
-@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.nps-sheet{position:relative;background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:24px;animation:sheetIn .3s cubic-bezier(.32,.72,0,1)}
+@keyframes sheetIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
 
-@media(min-width:540px){
-  .nps-overlay{align-items:center;padding:24px}
-  .nps-sheet{border-radius:16px;border:1px solid var(--border2);max-width:420px;padding:28px}
-}
+.nps-handle{display:none}
 
-.nps-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px}
-@media(min-width:540px){.nps-handle{display:none}}
+/* close button */
+.nps-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s;padding:0}
+.nps-close:hover{background:rgba(0,0,0,.7)}
+.nps-close svg{width:14px;height:14px}
 
-/* nps image header */
-.nps-img-wrap{margin:-24px -24px 20px;overflow:hidden;border-radius:20px 20px 0 0;position:relative;height:160px;display:none}
+/* nps image header — no gradient overlay */
+.nps-img-wrap{margin:-24px -24px 20px;overflow:hidden;border-radius:16px 16px 0 0;position:relative;height:160px;display:none}
 .nps-img-wrap.has-img{display:block}
 .nps-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
-.nps-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(13,13,13,.9) 100%)}
-@media(min-width:540px){
-  .nps-img-wrap{margin:-28px -28px 20px;border-radius:16px 16px 0 0}
-}
 
 .nps-title{font-size:18px;font-weight:700;margin-bottom:6px}
 .nps-desc{font-size:14px;color:var(--text2);line-height:1.55;margin-bottom:20px}
@@ -167,19 +162,19 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 .nps-textarea:focus{border-color:rgba(255,255,255,.3)}
 
 .nps-actions{display:flex;gap:10px}
-.btn-send{flex:1;border-radius:9999px;padding:13px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)}
-.btn-send.ready{background:#fff;border-color:#fff;color:#141414}
-.btn-send.ready:hover{opacity:.88}
-.btn-skip{background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:9999px;color:var(--text3);font-family:inherit;font-size:14px;padding:13px 20px;cursor:pointer;transition:all .2s}
-.btn-skip:hover{color:var(--text2);border-color:var(--border2)}
+.btn-send,.btn-skip{flex:1;border-radius:9999px;padding:13px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-send{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.35)}
+.btn-send.ready{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-send.ready:hover{background:#3a78e0;border-color:#3a78e0}
+.btn-skip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff}
+.btn-skip:hover{background:rgba(255,255,255,.12)}
 
-.thanks{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0;text-align:center}
-.thanks-icon{font-size:36px}
-.thanks-title{font-size:17px;font-weight:600}
-.thanks-sub{font-size:14px;color:var(--text2)}
+.thanks{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0 4px;text-align:center}
+.thanks-title{font-size:18px;font-weight:700}
+.thanks-sub{font-size:14px;color:var(--text2);line-height:1.55}
 
-.btn-to-market{width:100%;background:#fff;color:#141414;border:none;border-radius:9999px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;transition:opacity .15s}
-.btn-to-market:hover{opacity:.88}
+.btn-to-market{width:100%;background:var(--blue);color:#fff;border:none;border-radius:9999px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;transition:background .15s}
+.btn-to-market:hover{background:#3a78e0}
 
 /* ══════════════════════════════
    PROTOTYPE SETTINGS
@@ -328,6 +323,9 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 <!-- ══ NPS OVERLAY ══ -->
 <div class="nps-overlay hidden" id="npsOverlay">
   <div class="nps-sheet">
+    <button class="nps-close" onclick="closeNps()" aria-label="Закрыть">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
     <div class="nps-img-wrap" id="npsImgWrap">
       <img id="npsImg" src="" alt=""/>
     </div>
@@ -356,7 +354,6 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 
     <div id="thankState" style="display:none">
       <div class="thanks">
-        <div class="thanks-icon">🙌</div>
         <div class="thanks-title">Спасибо за отзыв!</div>
         <div class="thanks-sub">Ваша оценка помогает нам делать покупки лучше.</div>
       </div>
