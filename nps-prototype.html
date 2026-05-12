@@ -34,42 +34,83 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 /* ══════════════════════════════
    S1 — STOREFRONT
 ══════════════════════════════ */
-.store-body{flex:1;padding:16px;max-width:960px;width:100%;margin:0 auto}
-.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+
+/* Top brand bar (MY.GAMES) */
+.brand-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;max-width:960px;width:100%;margin:0 auto}
+.brand-logo{display:flex;align-items:center;gap:8px;color:var(--text);text-decoration:none;cursor:pointer}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center}
+.brand-mark svg{width:34px;height:24px;display:block}
+.brand-text{font-size:15px;font-weight:800;letter-spacing:.04em}
+.brand-img{height:24px;width:auto;display:block}
+.brand-actions{display:flex;align-items:center;gap:10px}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:transparent;border:none;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s}
+.icon-btn:hover{background:rgba(255,255,255,.06)}
+.icon-btn svg{width:22px;height:22px;display:block}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5a3b29,#8a5a3a);overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:600;cursor:pointer;flex-shrink:0}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.menu-btn{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s;flex-shrink:0}
+.menu-btn:hover{background:#2e2e2e}
+.menu-btn svg{width:18px;height:18px;display:block}
+
+/* Game header */
+.game-header{display:flex;align-items:center;gap:14px;padding:10px 16px 6px;max-width:960px;width:100%;margin:0 auto}
+.game-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#3a3a3a,#1a1a1a);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:30px}
+.game-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.game-title{font-size:24px;font-weight:700;line-height:1.1}
+.game-sub{font-size:13px;color:var(--text2);margin-top:3px}
+
+/* Account picker */
+.account-picker{display:flex;align-items:center;gap:8px;padding:8px 16px 14px;font-size:14px;font-weight:500;cursor:pointer;max-width:960px;width:100%;margin:0 auto}
+.ap-android{display:inline-flex;align-items:center;justify-content:center}
+.ap-android svg{width:18px;height:18px;display:block}
+.ap-caret{color:var(--text3);font-size:14px;margin-left:2px}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;padding:0 4px;max-width:960px;width:100%;margin:0 auto}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:10px 16px;font-size:14px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;margin-bottom:-1px;flex-shrink:0;transition:color .15s}
+.tab{padding:12px 14px;font-size:15px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;margin-bottom:-1px;flex-shrink:0;transition:color .15s}
 .tab.active{color:var(--text);border-bottom-color:var(--text)}
-.filters{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.filters::-webkit-scrollbar{display:none}
-.f-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
-.f-btn.active,.f-btn:hover{background:rgba(255,255,255,.1);color:var(--text);border-color:var(--border2)}
-.section-label{font-size:15px;font-weight:600;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
-@media(min-width:800px){.grid{grid-template-columns:repeat(6,1fr)}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
-.card:hover{transform:translateY(-2px);border-color:var(--border2)}
-.card:active{transform:scale(.97)}
-.card-img{aspect-ratio:1;background:linear-gradient(135deg,#111827,#1e3a5f);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
-.tag{position:absolute;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em}
-.tag-ltd{top:5px;left:5px;background:#c0392b;color:#fff}
-.tag-spc{top:5px;left:5px;background:#8e44ad;color:#fff}
-.tag-pop{top:5px;left:5px;background:#e67e22;color:#fff}
-.tag-corp{background:rgba(255,255,255,.15);color:var(--text2);border:1px solid rgba(255,255,255,.2)}
-.tag-corp-lt{top:5px;left:5px}
-.tag-corp-rb{top:20px;left:5px}
-.bonus-tag{position:absolute;top:5px;right:5px;background:#1a472a;color:#4caf50;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:700}
-.offer-tag{position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:2px 5px;font-size:9px;color:#fff;font-weight:600;line-height:1.3}
-.card-body{padding:8px 9px 10px}
-.card-name{font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:8px;min-height:30px}
-.price-pill{background:var(--blue);color:#fff;border-radius:5px;padding:4px 8px;font-size:11px;font-weight:600;display:inline-block}
+.tab:hover{color:var(--text)}
+
+/* Storefront body */
+.storefront{flex:1;padding:8px 0 24px;max-width:960px;width:100%;margin:0 auto}
+.section-title{font-size:20px;font-weight:700;padding:14px 16px 14px}
+
+/* Grid: 2 cols mobile, 3 cols tablet, 4 cols desktop */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 16px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
+
+/* Card */
+.card{display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:transform .15s}
+.card:hover{transform:translateY(-2px)}
+.card:active{transform:scale(.98)}
+
+.card-img{aspect-ratio:1;background:radial-gradient(circle at 50% 38%,rgba(80,100,160,.18) 0%,transparent 65%),linear-gradient(180deg,#1c1c1c 0%,#0f0f0f 100%);border-radius:14px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.product-emoji{font-size:80px;line-height:1;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5))}
+.product-img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Limited Edition tag — bottom-left inside image */
+.tag-ltd{position:absolute;bottom:10px;left:10px;background:#e74c3c;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:.01em;z-index:2}
+
+/* Bonus tag — top-right inside image */
+.bonus-tag{position:absolute;top:10px;right:10px;background:#1a472a;color:#4caf50;border-radius:5px;padding:3px 7px;font-size:11px;font-weight:700;z-index:2}
+
+/* Offer badge — middle-right stacked */
+.badge-offer{position:absolute;top:50%;right:12px;transform:translateY(-40%);display:flex;flex-direction:column;box-shadow:0 6px 16px rgba(0,0,0,.45);border-radius:6px;overflow:hidden;z-index:2;min-width:74px}
+.bo-top{background:linear-gradient(135deg,#6e2cf2,#a256ff);color:#fff;font-size:10px;font-weight:800;padding:5px 8px 4px;text-align:center;text-transform:uppercase;line-height:1.05;letter-spacing:.02em}
+.bo-mult{background:linear-gradient(135deg,#ff7a3d,#e8492c);color:#fff;font-size:20px;font-weight:900;padding:3px 10px 5px;text-align:center;line-height:1.1}
+
+.card-name{font-size:15px;font-weight:500;color:var(--text);line-height:1.3;min-height:38px;padding:0 2px}
+.card-price-pill{background:var(--blue);color:#fff;border-radius:9999px;padding:7px 16px;font-size:14px;font-weight:600;display:inline-block;align-self:flex-start;margin-left:2px}
 
 /* ══════════════════════════════
    S2 — PRODUCT DETAIL
 ══════════════════════════════ */
 .detail-body{flex:1;display:flex;flex-direction:column;max-width:480px;width:100%;margin:0 auto;padding:0 16px 32px}
 .detail-hero{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.07) 0%,transparent 70%),linear-gradient(180deg,#111827 0%,#0d0d0d 100%);display:flex;flex-direction:column;align-items:center;padding:32px 24px 24px;gap:12px;text-align:center;margin:0 -16px;border-bottom:1px solid var(--border)}
-.detail-emoji{font-size:72px;line-height:1;margin-bottom:4px}
+.detail-emoji{font-size:72px;line-height:1;margin-bottom:4px;display:flex;align-items:center;justify-content:center;min-height:160px}
+.detail-img{width:160px;height:160px;object-fit:contain;display:block}
 .detail-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .dtag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px}
 .dtag-ltd{background:#c0392b22;color:#e74c3c;border:1px solid #c0392b44}
@@ -92,6 +133,42 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 .btn-primary:active{transform:scale(.98)}
 
 /* ══════════════════════════════
+   PRODUCT DETAIL MODAL
+══════════════════════════════ */
+.product-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:180;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);animation:overlayIn .25s ease}
+.product-modal.hidden{display:none}
+
+.product-sheet{background:var(--bg);width:100%;max-width:520px;border-radius:24px;padding:18px 18px 24px;animation:sheetIn .35s cubic-bezier(.32,.72,0,1);max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+
+.pm-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm-game{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;color:var(--text)}
+.pm-game-icon{width:34px;height:34px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:18px}
+.pm-game-icon img{width:100%;height:100%;object-fit:cover}
+.pm-close{width:34px;height:34px;border-radius:50%;background:transparent;border:none;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s;flex-shrink:0}
+.pm-close:hover{background:rgba(255,255,255,.08)}
+.pm-close svg{width:16px;height:16px}
+
+.pm-image-wrap{aspect-ratio:1;background:linear-gradient(180deg,#1f1f1f,#0f0f0f);border-radius:18px;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden}
+.pm-image{max-width:60%;max-height:60%;object-fit:contain;filter:drop-shadow(0 12px 28px rgba(0,0,0,.55))}
+.pm-emoji-fallback{font-size:120px;line-height:1}
+
+.pm-name{font-size:28px;font-weight:800;color:var(--text);line-height:1.15;margin-top:4px}
+
+.pm-price-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.pm-price{font-size:26px;font-weight:800;color:var(--text)}
+.pm-qty{display:flex;align-items:stretch;border-radius:10px;overflow:hidden;flex-shrink:0}
+.pm-qty-input{width:52px;height:40px;background:var(--surface2);border:none;color:var(--text);text-align:center;font-size:14px;font-weight:600;outline:none;padding:0;-moz-appearance:textfield}
+.pm-qty-input::-webkit-outer-spin-button,.pm-qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pm-qty-caret{width:40px;height:40px;background:#fff;color:#111;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .15s}
+.pm-qty-caret:hover{background:#e8e8e8}
+
+.pm-buy{width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:600;cursor:pointer;transition:background .15s}
+.pm-buy:hover{background:#3a78e0}
+.pm-buy:active{transform:scale(.99)}
+
+.pm-desc{font-size:14px;color:var(--text);line-height:1.5;font-weight:500}
+
+/* ══════════════════════════════
    S3 — PROCESSING
 ══════════════════════════════ */
 .processing-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:32px 24px;text-align:center}
@@ -112,7 +189,8 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 .success-game-chip .chip-name{font-size:15px;font-weight:600}
 
 .success-product{display:flex;flex-direction:column;align-items:center;gap:8px}
-.success-product-img{font-size:96px;line-height:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,.6))}
+.success-product-img{font-size:96px;line-height:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,.6));display:flex;align-items:center;justify-content:center;min-height:200px}
+.success-img{width:200px;height:200px;object-fit:contain;display:block}
 
 .success-info{display:flex;flex-direction:column;align-items:center;gap:10px}
 .success-check{display:flex;align-items:center;gap:10px}
@@ -177,6 +255,41 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 .btn-to-market:hover{background:#3a78e0}
 
 /* ══════════════════════════════
+   STOREFRONT SURVEY TOAST
+══════════════════════════════ */
+.survey-toast{position:fixed;bottom:20px;right:20px;width:340px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:16px 18px 14px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:150;animation:toastIn .35s cubic-bezier(.32,.72,0,1)}
+.survey-toast.hidden{display:none}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@media(max-width:600px){
+  .survey-toast{left:12px;right:12px;bottom:12px;width:auto}
+}
+
+.st-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.st-q{font-size:14px;font-weight:600;line-height:1.4;flex:1;color:var(--text)}
+.st-close{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s}
+.st-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.st-close svg{width:10px;height:10px}
+
+.st-stars{display:flex;gap:6px;justify-content:flex-start}
+.st-s{background:none;border:none;font-size:28px;color:rgba(255,255,255,.18);cursor:pointer;padding:0;line-height:1;transition:color .1s,transform .1s}
+.st-s:hover{transform:scale(1.15)}
+.st-s.on{color:#ffb800}
+.st-hint{font-size:12px;color:var(--text3);min-height:14px;margin-top:6px}
+
+.st-comment{margin-top:10px;display:none}
+.st-comment.open{display:block}
+.st-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#fff;resize:none;height:54px;outline:none;transition:border-color .2s;line-height:1.5}
+.st-textarea::placeholder{color:rgba(255,255,255,.25)}
+.st-textarea:focus{border-color:rgba(255,255,255,.3)}
+.st-send{width:100%;background:var(--blue);color:#fff;border:none;border-radius:9999px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .15s}
+.st-send:hover{background:#3a78e0}
+
+.st-thanks{display:none;text-align:center;padding:6px 0}
+.st-thanks.show{display:block}
+.st-thanks-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.st-thanks-sub{font-size:12px;color:var(--text2)}
+
+/* ══════════════════════════════
    PROTOTYPE SETTINGS
 ══════════════════════════════ */
 .settings-fab{position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:18px;transition:all .15s;box-shadow:0 4px 16px rgba(0,0,0,.4)}
@@ -214,68 +327,109 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 
 <!-- ══ S1: STOREFRONT ══ -->
 <div class="screen active" id="s1">
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">War Robots</div>
-      <div class="topbar-sub">Официальный хаб</div>
-    </div>
-    <div class="topbar-right">
-      <div class="account-chip"><span class="dot"></span>FM9CUY</div>
+
+  <!-- Top brand bar (MY.GAMES) -->
+  <div class="brand-bar">
+    <a class="brand-logo" href="#" onclick="event.preventDefault()">
+      <img class="brand-img" src="data/assets/mygames-logo.png" alt="MY.GAMES"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">
+      <span class="brand-mark" style="display:none">
+        <svg viewBox="0 0 34 24" fill="none" aria-hidden="true">
+          <path d="M3 21 L3 3 L11 14 L17 6 L23 14 L31 3 L31 21" stroke="#fff" stroke-width="2.6" stroke-linejoin="miter" stroke-linecap="square"/>
+        </svg>
+      </span>
+    </a>
+    <div class="brand-actions">
+      <button class="icon-btn" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9z"/>
+          <path d="M10 21a2 2 0 0 0 4 0"/>
+        </svg>
+      </button>
+      <div class="avatar" title="Profile">
+        <!-- TODO: replace with real user avatar -->
+        <img src="" alt="" onerror="this.style.display='none';this.parentElement.textContent='A'">
+      </div>
+      <button class="menu-btn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
+      </button>
     </div>
   </div>
-  <div class="store-body">
-    <div class="tabs">
-      <button class="tab">Главная</button>
-      <button class="tab">АРК</button>
-      <button class="tab">Новости</button>
-      <button class="tab active">Товары</button>
-      <button class="tab">История</button>
-      <button class="tab">Подарки</button>
+
+  <!-- Game header -->
+  <div class="game-header">
+    <div class="game-icon">
+      <img src="data/assets/war-robots-icon.png" alt="War Robots"
+           onerror="this.style.display='none';this.parentElement.textContent='🤖'">
     </div>
-    <div class="filters">
-      <button class="f-btn active">Limited edition</button>
-      <button class="f-btn">Special</button>
-      <button class="f-btn">Most popular</button>
-      <button class="f-btn">New</button>
+    <div>
+      <div class="game-title">War Robots</div>
+      <div class="game-sub">Official hub</div>
     </div>
-    <div class="section-label">Товары</div>
+  </div>
+
+  <!-- Account picker -->
+  <div class="account-picker">
+    <span class="ap-android">
+      <svg viewBox="0 0 24 24" fill="#a4c639" aria-hidden="true">
+        <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.16-.65-.05-.83.23l-1.88 3.24c-2.86-1.21-6.08-1.21-8.94 0L5.65 5.67c-.18-.28-.54-.39-.83-.23-.31.16-.42.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/>
+      </svg>
+    </span>
+    <span>FM9CUY</span>
+    <span class="ap-caret">⌄</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab">Home</button>
+    <button class="tab">Official APK</button>
+    <button class="tab">News</button>
+    <button class="tab active">Items</button>
+    <button class="tab">Gift cards</button>
+    <button class="tab">History</button>
+  </div>
+
+  <!-- Items grid -->
+  <div class="storefront">
+    <div class="section-title">Items</div>
     <div class="grid" id="grid"></div>
   </div>
 </div>
 
-<!-- ══ S2: PRODUCT DETAIL ══ -->
-<div class="screen" id="s2">
-  <div class="topbar">
-    <button class="back-btn" onclick="go('s1')">←</button>
-    <div>
-      <div class="topbar-title">Покупка</div>
-      <div class="topbar-sub">War Robots</div>
-    </div>
-  </div>
-  <div class="detail-body">
-    <div class="detail-hero">
-      <div class="detail-emoji" id="d-emoji">🧊</div>
-      <div class="detail-tags" id="d-tags"></div>
-      <div class="detail-name" id="d-name">Товар</div>
-      <div class="detail-game">War Robots</div>
-    </div>
-    <div class="detail-form">
-      <div>
-        <div class="form-label">Игровой аккаунт</div>
-        <div class="account-box">
-          <div>
-            <div class="acc-label-sm">Игрок</div>
-            <div class="acc-id-lg">FM9CUY</div>
-          </div>
-          <span class="acc-change">Изменить</span>
+<!-- ══ PRODUCT DETAIL MODAL ══ -->
+<div class="product-modal hidden" id="productModal">
+  <div class="product-sheet">
+    <div class="pm-header">
+      <div class="pm-game">
+        <div class="pm-game-icon">
+          <img src="data/assets/war-robots-icon.png" alt=""
+               onerror="this.style.display='none';this.parentElement.textContent='🤖'">
         </div>
+        <span>War Robots</span>
       </div>
-      <div class="divider"></div>
-      <div class="price-row">
-        <span class="plabel">Итого</span>
-        <span class="pvalue" id="d-price">1,09 $</span>
+      <button class="pm-close" onclick="closeProductModal()" aria-label="Закрыть">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="pm-image-wrap" id="pmImageWrap"></div>
+
+    <div class="pm-name" id="pmName">Item</div>
+
+    <div class="pm-price-row">
+      <div class="pm-price" id="pmPrice">$0.00</div>
+      <div class="pm-qty">
+        <input type="number" min="1" class="pm-qty-input" id="pmQty" value="1">
+        <button class="pm-qty-caret" aria-label="Quantity">⌄</button>
       </div>
-      <button class="btn-primary" onclick="startProcessing()">Купить</button>
+    </div>
+
+    <button class="pm-buy" onclick="startProcessing()">Buy Now</button>
+
+    <div class="pm-desc" id="pmDesc">
+      This rare type of artificial gem is used to buy special offers. They are so valuable you can buy almost anything for them.
     </div>
   </div>
 </div>
@@ -362,13 +516,55 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
   </div>
 </div>
 
+<!-- ══ STOREFRONT SURVEY TOAST ══ -->
+<div class="survey-toast hidden" id="surveyToast">
+  <div class="st-header">
+    <div class="st-q" id="stQuestion">Довольны ли вы ассортиментом товаров на витрине?</div>
+    <button class="st-close" onclick="closeSurveyToast('dismiss')" aria-label="Закрыть">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div id="stForm">
+    <div class="st-stars" id="stStars">
+      <button class="st-s" data-v="1">★</button>
+      <button class="st-s" data-v="2">★</button>
+      <button class="st-s" data-v="3">★</button>
+      <button class="st-s" data-v="4">★</button>
+      <button class="st-s" data-v="5">★</button>
+    </div>
+    <div class="st-hint" id="stHint"></div>
+    <div class="st-comment" id="stComment">
+      <textarea class="st-textarea" id="stText" placeholder="Опционально — пара слов"></textarea>
+      <button class="st-send" onclick="submitSurveyToast()">Отправить</button>
+    </div>
+  </div>
+
+  <div class="st-thanks" id="stThanks">
+    <div class="st-thanks-title">Спасибо за отзыв!</div>
+    <div class="st-thanks-sub">Это поможет нам улучшить витрину.</div>
+  </div>
+</div>
+
 <!-- ══ PROTOTYPE SETTINGS (NPS image) ══ -->
 <button class="settings-fab" onclick="openSettings()" title="Настройки прототипа" aria-label="Настройки">⚙</button>
 
 <div class="settings-overlay hidden" id="settingsOverlay">
   <div class="settings-sheet">
-    <div class="settings-title">Картинка опроса</div>
-    <div class="settings-subt">Шапка NPS-опроса. Вставьте ссылку или загрузите файл с устройства.</div>
+    <div class="settings-title">Настройки прототипа</div>
+    <div class="settings-subt">Демо-контролы и оформление NPS-опроса.</div>
+
+    <div class="set-section">
+      <div class="set-label">Демо: опрос на витрине</div>
+      <div class="set-row" style="flex-wrap:wrap">
+        <button class="btn-set" onclick="demoShowSurveyToast()">Показать сейчас</button>
+        <button class="btn-set ghost" onclick="demoResetCooldown()">Сбросить cooldown</button>
+      </div>
+      <div class="set-error" id="setCooldownStatus" style="color:var(--text3)"></div>
+    </div>
+
+    <div class="set-label" style="margin-top:18px">Картинка post-purchase опроса</div>
+    <div class="settings-subt" style="margin-bottom:14px">Шапка bottom-sheet после успешной покупки.</div>
 
     <div class="set-section">
       <div class="set-label">URL картинки</div>
@@ -405,61 +601,82 @@ function getNpsImage(){
   return localStorage.getItem("nps_image_override") || NPS_IMAGE_DEFAULT;
 }
 
+// Картинки с _запечёнными_ баджами (например, "+5%" уже на изображении) — не дублируем
+// этот бадж через CSS. CSS-баджи offer/bonus добавляются только когда явно заданы в данных.
 const PRODUCTS=[
-  {id:1,name:"100 + 150 Д-кубов",  price:"1,09 $", emoji:"🧊",tags:["ltd"],offer:"ONE-TIME OFFER ×2.5"},
-  {id:2,name:"500 + 500 Д-кубов",  price:"4,99 $", emoji:"🧊",tags:["ltd"],offer:"ONE-TIME OFFER ×2"},
-  {id:3,name:"100 Thorium",         price:"0,10 $", emoji:"⚗️",tags:["ltd","corp"]},
-  {id:4,name:"50 Д-кубов",          price:"1,00 $", emoji:"🧊",tags:["spc","corp"]},
-  {id:5,name:"1500 + 75 Д-кубов",  price:"15,99 $",emoji:"🧊",tags:["pop"],bonus:"+5%"},
-  {id:6,name:"30000 + 1500 Д-кубов",price:"314,99 $",emoji:"💎",bonus:"+5%"},
-  {id:7,name:"10000 + 500 Д-кубов",price:"104,99 $",emoji:"💎",bonus:"+5%"},
-  {id:8,name:"4500 + 225 Д-кубов", price:"45,99 $",emoji:"🧊",bonus:"+5%"},
-  {id:9,name:"2500 + 125 Д-кубов", price:"25,99 $",emoji:"🧊",bonus:"+5%"},
-  {id:10,name:"750 + 37 Д-кубов",  price:"7,99 $", emoji:"🧊",bonus:"+5%"},
-  {id:11,name:"500 D-Gems",         price:"4,99 $", emoji:"💎",tags:["corp"],bonus:"+5%"},
-  {id:12,name:"500 Д-кубов",        price:"4,99 $", emoji:"🧊"},
+  {id:1, name:"100 + 150 D-Gems",   price:"$0.99",   emoji:"🧊", image:"data/assets/dgems-otc.png",        tags:["ltd"]},
+  {id:2, name:"250 D-Gems",          price:"$2.49",   emoji:"🧊", image:"data/assets/dgems-single.png"},
+  {id:3, name:"500 + 500 D-Gems",   price:"$4.99",   emoji:"🧊", image:"data/assets/dgems-single.png",     tags:["ltd"]},
+  {id:4, name:"500 D-Gems",          price:"$4.99",   emoji:"🧊", image:"data/assets/dgems-single.png"},
+  {id:5, name:"1500 + 75 D-Gems",   price:"$15.99",  emoji:"🧊", image:"data/assets/dgems-pack-3.png"},
+  {id:6, name:"2500 + 125 D-Gems",  price:"$25.99",  emoji:"🧊", image:"data/assets/dgems-pack-3.png"},
+  {id:7, name:"4500 + 225 D-Gems",  price:"$45.99",  emoji:"🧊", image:"data/assets/dgems-pack-medium.png"},
+  {id:8, name:"10000 + 500 D-Gems", price:"$104.99", emoji:"💎", image:"data/assets/dgems-pack-2x2.png"},
 ];
 const TL={ltd:"Limited Edition",spc:"Special",pop:"Most Popular",corp:"CORP"};
 const TC={ltd:"dtag-ltd",spc:"dtag-ltd",pop:"dtag-pop",corp:"dtag-corp"};
-const CTC={ltd:"tag-ltd",spc:"tag-spc",pop:"tag-pop"};
 const HINTS=["","Очень плохо","Плохо","Нормально","Хорошо","Отлично!"];
 let rating=0;
 
 // render grid
 const grid=document.getElementById("grid");
 PRODUCTS.forEach(p=>{
-  const primary=p.tags?.find(t=>t!=="corp");
-  const hasCorp=p.tags?.includes("corp");
   const el=document.createElement("div");
   el.className="card";
   el.onclick=()=>openProduct(p);
   el.innerHTML=`
     <div class="card-img">
-      ${primary?`<span class="tag ${CTC[primary]}">${TL[primary]}</span>`:""}
-      ${hasCorp&&primary?`<span class="tag tag-corp tag-corp-rb">CORP</span>`:""}
-      ${hasCorp&&!primary?`<span class="tag tag-corp tag-corp-lt">CORP</span>`:""}
-      ${p.emoji}
-      ${p.offer?`<span class="offer-tag">${p.offer}</span>`:""}
+      ${p.image
+        ? `<img class="product-img" src="${p.image}" alt="${p.name}"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+           <span class="product-emoji" style="display:none">${p.emoji}</span>`
+        : `<span class="product-emoji">${p.emoji}</span>`}
+      ${p.offer?`
+        <div class="badge-offer">
+          <div class="bo-top">${p.offer.label}</div>
+          <div class="bo-mult">${p.offer.mult}</div>
+        </div>`:""}
       ${p.bonus?`<span class="bonus-tag">${p.bonus}</span>`:""}
+      ${p.tags?.includes("ltd")?`<span class="tag-ltd">Limited Edition</span>`:""}
     </div>
-    <div class="card-body">
-      <div class="card-name">${p.name}</div>
-      <span class="price-pill">${p.price}</span>
-    </div>`;
+    <div class="card-name">${p.name}</div>
+    <div class="card-price-pill">${p.price}</div>`;
   grid.appendChild(el);
 });
 
 function openProduct(p){
-  document.getElementById("d-emoji").textContent=p.emoji;
-  document.getElementById("d-name").textContent=p.name;
-  document.getElementById("d-price").textContent=p.price;
-  document.getElementById("d-tags").innerHTML=(p.tags||[]).map(t=>`<span class="dtag ${TC[t]}">${TL[t]}</span>`).join("");
-  document.getElementById("s-emoji").textContent=p.emoji;
-  document.getElementById("s-name").textContent=p.name;
-  go("s2");
+  // Modal visual
+  const modalVisual = p.image
+    ? `<img class="pm-image" src="${p.image}" alt="${p.name}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+       <span class="pm-emoji-fallback" style="display:none">${p.emoji}</span>`
+    : `<span class="pm-emoji-fallback">${p.emoji}</span>`;
+  document.getElementById("pmImageWrap").innerHTML = modalVisual;
+  document.getElementById("pmName").textContent = p.name;
+  document.getElementById("pmPrice").textContent = p.price;
+  document.getElementById("pmQty").value = "1";
+
+  // Success screen visual (pre-loaded for after-purchase)
+  const successVisual = p.image
+    ? `<img src="${p.image}" alt="" class="success-img" onerror="this.replaceWith(document.createTextNode('${p.emoji}'))">`
+    : p.emoji;
+  document.getElementById("s-emoji").innerHTML = successVisual;
+  document.getElementById("s-name").textContent = p.name;
+
+  document.getElementById("productModal").classList.remove("hidden");
 }
 
+function closeProductModal(){
+  document.getElementById("productModal").classList.add("hidden");
+}
+
+// Закрытие по клику на бекдроп
+document.getElementById("productModal").addEventListener("click", e=>{
+  if(e.target.id === "productModal") closeProductModal();
+});
+
 function startProcessing(){
+  closeProductModal();
   go("s3");
   const pb=document.getElementById("pbar");
   pb.style.transition="none"; pb.style.width="0";
@@ -468,37 +685,206 @@ function startProcessing(){
   setTimeout(()=>go("s4"),3000);
 }
 
-// ── NPS eligibility ──────────────────────────────────────────────────────────
+// ── Survey eligibility (общий cooldown для всех опросов) ────────────────────
 
 // В реальном приложении заменить на проверку сессии/токена
 function isAuthenticated(){ return false; }
 
-const NPS_COOLDOWN_DAYS = 90;
+const SURVEY_COOLDOWN_DAYS = 90;
+// В прототипе используем localStorage — cookies не работают на file://.
+// В продакшене это будет cookie `survey_shown_at` (SameSite=Lax, 90 дней).
+const SURVEY_COOLDOWN_KEY = "survey_shown_at";
 
-function isNpsCookieCooldownActive(){
-  const m = document.cookie.match(/nps_shown_at=(\d+)/);
-  if(!m) return false;
-  return (Date.now() - Number(m[1])) / 86400000 < NPS_COOLDOWN_DAYS;
+function isSurveyCooldownActive(){
+  const ts = localStorage.getItem(SURVEY_COOLDOWN_KEY);
+  if(!ts) return false;
+  return (Date.now() - Number(ts)) / 86400000 < SURVEY_COOLDOWN_DAYS;
 }
 
-function setNpsCookie(){
-  const expires = new Date(Date.now() + NPS_COOLDOWN_DAYS * 86400000).toUTCString();
-  document.cookie = `nps_shown_at=${Date.now()}; expires=${expires}; path=/; SameSite=Lax`;
+function setSurveyCooldown(){
+  localStorage.setItem(SURVEY_COOLDOWN_KEY, String(Date.now()));
+}
+
+function clearSurveyCooldown(){
+  localStorage.removeItem(SURVEY_COOLDOWN_KEY);
 }
 
 async function onBackToMarket(){
-  // Анонимы: проверяем куку до вызова API
-  if(!isAuthenticated() && isNpsCookieCooldownActive()){
+  // Анонимы: проверяем единый cooldown до вызова API.
+  // Если на витрине уже показали тоаст — post-purchase шторка не появится.
+  if(!isAuthenticated() && isSurveyCooldownActive()){
     go("s1");
     return;
   }
 
-  // В реальном приложении: GET /api/orders/{orderId}/nps/eligibility/
+  // В реальном приложении: GET /api/surveys/eligibility/?placement=post_purchase&orderId={id}
   // Для прототипа симулируем ответ — всегда показываем
   const shouldShow = true;
 
   if(shouldShow) showNps();
   else go("s1");
+}
+
+// ── Storefront survey: триггер (время + скролл) ─────────────────────────────
+
+const STOREFRONT_TIMER_MS = 30000;
+const STOREFRONT_SCROLL_THRESHOLD = 0.5;
+let storefrontTimerId = null;
+let storefrontTriggered = false;
+
+function maybeTriggerStorefrontSurvey(){
+  if(storefrontTriggered) return;
+  if(!document.getElementById("s1").classList.contains("active")) return;
+  if(!isAuthenticated() && isSurveyCooldownActive()) return;
+  storefrontTriggered = true;
+  showSurveyToast({source: "auto"});
+}
+
+function startStorefrontTriggers(){
+  // Сброс при каждом переходе на витрину
+  storefrontTriggered = false;
+  if(storefrontTimerId) clearTimeout(storefrontTimerId);
+  window.removeEventListener("scroll", onStorefrontScroll);
+
+  // Триггер 1: время
+  storefrontTimerId = setTimeout(maybeTriggerStorefrontSurvey, STOREFRONT_TIMER_MS);
+
+  // Триггер 2: скролл > 50%
+  window.addEventListener("scroll", onStorefrontScroll, {passive: true});
+}
+
+function onStorefrontScroll(){
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  if(max <= 0) return;
+  const ratio = window.scrollY / max;
+  if(ratio > STOREFRONT_SCROLL_THRESHOLD) maybeTriggerStorefrontSurvey();
+}
+
+// ── Storefront survey: контроллер тоста ─────────────────────────────────────
+
+const STOREFRONT_AUTO_HIDE_MS = 12000;
+const ST_HINTS = ["", "Совсем нет", "Скорее нет", "Так себе", "Скорее да", "Полностью!"];
+
+// Реестр опросов для витрины. В проде это будет конфиг на бэкенде:
+// {placement, key, question, weight, enabled} — бэкенд возвращает один из них в /api/surveys/eligibility/
+const STOREFRONT_SURVEYS = [
+  {key:"storefront_assortment", question:"Довольны ли вы ассортиментом товаров на витрине?"},
+  {key:"storefront_design",     question:"Устроил бы вас этот дизайн витрины?"},
+  {key:"storefront_pricing",    question:"Считаете ли вы цены на витрине справедливыми?"},
+  {key:"storefront_navigation", question:"Легко ли вам найти нужный товар?"},
+];
+
+function pickStorefrontSurvey(){
+  return STOREFRONT_SURVEYS[Math.floor(Math.random() * STOREFRONT_SURVEYS.length)];
+}
+
+let surveyRating = 0;
+let surveyInteracted = false;
+let surveyAutoHideId = null;
+let currentSurveyKey = null;
+
+function showSurveyToast({source}){
+  // Pick random survey from registry (в проде — бэкенд решает через GET /api/surveys/eligibility/)
+  const survey = pickStorefrontSurvey();
+  currentSurveyKey = survey.key;
+  document.getElementById("stQuestion").textContent = survey.question;
+
+  // Reset state
+  surveyRating = 0;
+  surveyInteracted = false;
+  paintSurveyStars(0);
+  document.getElementById("stHint").textContent = "";
+  document.getElementById("stText").value = "";
+  document.getElementById("stComment").classList.remove("open");
+  document.getElementById("stForm").style.display = "";
+  document.getElementById("stThanks").classList.remove("show");
+
+  document.getElementById("surveyToast").classList.remove("hidden");
+  document.querySelector(".settings-fab").style.display = "none";
+
+  // Cooldown активируется фактом показа (как и в post-purchase)
+  // Демо-вызов из настроек не блокирует cooldown — но проставляет его,
+  // потому что для пользователя это «показ»
+  if(!isAuthenticated()){
+    setSurveyCooldown();
+  } else {
+    // POST /api/surveys/impression/ {key} — fire-and-forget
+    fetch("/api/surveys/impression/", {
+      method: "POST",
+      credentials: "include",
+      headers: {"Content-Type": "application/json", "X-CSRFToken": getCsrfToken()},
+      body: JSON.stringify({key: survey.key})
+    }).catch(()=>{});
+  }
+
+  // Auto-hide если не было взаимодействия
+  if(surveyAutoHideId) clearTimeout(surveyAutoHideId);
+  surveyAutoHideId = setTimeout(()=>{
+    if(!surveyInteracted) closeSurveyToast("auto_hide");
+  }, STOREFRONT_AUTO_HIDE_MS);
+}
+
+function closeSurveyToast(reason){
+  document.getElementById("surveyToast").classList.add("hidden");
+  document.querySelector(".settings-fab").style.display = "";
+  if(surveyAutoHideId){ clearTimeout(surveyAutoHideId); surveyAutoHideId = null; }
+  window.removeEventListener("scroll", onStorefrontScroll);
+}
+
+function paintSurveyStars(n){
+  document.querySelectorAll(".st-s").forEach(s=>s.classList.toggle("on", +s.dataset.v <= n));
+}
+
+document.querySelectorAll(".st-s").forEach(s=>{
+  s.addEventListener("mouseenter", ()=>paintSurveyStars(+s.dataset.v));
+  s.addEventListener("mouseleave", ()=>paintSurveyStars(surveyRating));
+  s.addEventListener("click", ()=>{
+    surveyRating = +s.dataset.v;
+    surveyInteracted = true;
+    paintSurveyStars(surveyRating);
+    document.getElementById("stHint").textContent = ST_HINTS[surveyRating];
+    document.getElementById("stComment").classList.add("open");
+    // Снимаем авто-скрытие — юзер взаимодействует
+    if(surveyAutoHideId){ clearTimeout(surveyAutoHideId); surveyAutoHideId = null; }
+  });
+});
+
+function submitSurveyToast(){
+  if(!surveyRating) return;
+  // В реальном приложении: POST /api/surveys/response/
+  // body: {key: currentSurveyKey, rating, comment}
+  document.getElementById("stForm").style.display = "none";
+  document.getElementById("stThanks").classList.add("show");
+  setTimeout(()=>closeSurveyToast("submitted"), 1800);
+}
+
+// ── Демо-контролы (только для прототипа) ────────────────────────────────────
+
+function demoShowSurveyToast(){
+  closeSettings();
+  // Если демонстрация идёт не на витрине — переключаемся туда (это сбросит триггеры)
+  if(!document.getElementById("s1").classList.contains("active")) go("s1");
+  // Принудительно показываем, игнорируя cooldown — это демо
+  storefrontTriggered = true;
+  showSurveyToast({source: "demo"});
+}
+
+function demoResetCooldown(){
+  clearSurveyCooldown();
+  storefrontTriggered = false;
+  updateCooldownStatus();
+}
+
+function updateCooldownStatus(){
+  const el = document.getElementById("setCooldownStatus");
+  if(!el) return;
+  const ts = localStorage.getItem(SURVEY_COOLDOWN_KEY);
+  if(ts && isSurveyCooldownActive()){
+    const daysLeft = Math.ceil(SURVEY_COOLDOWN_DAYS - (Date.now() - Number(ts)) / 86400000);
+    el.textContent = `Cooldown активен — осталось ~${daysLeft} дн.`;
+  } else {
+    el.textContent = "Cooldown не активен — опрос покажется на витрине.";
+  }
 }
 
 // ── NPS overlay ───────────────────────────────────────────────────────────────
@@ -521,15 +907,16 @@ function showNps(){
   }
   document.getElementById("npsOverlay").classList.remove("hidden");
 
-  // Записать факт показа (активирует cooldown)
+  // Записать факт показа (активирует единый survey cooldown)
   if(!isAuthenticated()){
-    setNpsCookie();
+    setSurveyCooldown();
   } else {
-    // POST /api/users/nps/impression/ — fire-and-forget
-    fetch("/api/users/nps/impression/", {
+    // POST /api/surveys/impression/ {key: "post_purchase_nps"} — fire-and-forget
+    fetch("/api/surveys/impression/", {
       method: "POST",
       credentials: "include",
-      headers: { "X-CSRFToken": getCsrfToken() }
+      headers: {"Content-Type": "application/json", "X-CSRFToken": getCsrfToken()},
+      body: JSON.stringify({key: "post_purchase_nps"})
     }).catch(()=>{});
   }
 }
@@ -576,6 +963,7 @@ function openSettings(){
   document.getElementById("setImgUrl").value = stored.startsWith("data:") ? "" : stored;
   document.getElementById("setError").textContent = "";
   updatePreview(cur);
+  updateCooldownStatus();
   document.getElementById("settingsOverlay").classList.remove("hidden");
 }
 function closeSettings(){
@@ -646,13 +1034,13 @@ function go(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   window.scrollTo(0,0);
+  if(id === "s1") startStorefrontTriggers();
 }
+
+// Триггер витрины при первой загрузке
+startStorefrontTriggers();
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",function(){
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  this.classList.add("active");
-}));
-document.querySelectorAll(".f-btn").forEach(b=>b.addEventListener("click",function(){
-  document.querySelectorAll(".f-btn").forEach(x=>x.classList.remove("active"));
   this.classList.add("active");
 }));
 </script>
