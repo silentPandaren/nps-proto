@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NPS Dashboard — Market</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script>
+  // Apply saved theme synchronously before stylesheet evaluates → no flash on light reload.
+  document.documentElement.dataset.theme = localStorage.getItem("nps_theme") || "dark";
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root,[data-theme="dark"]{
+  --bg:#0d0d0d;--surface:#1a1a1a;--surface2:#242424;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#fff;--text2:rgba(255,255,255,0.65);--text3:rgba(255,255,255,0.35);
+  --accent:#f0c323;--green:#51ac17;--blue:#4285f4;--red:#e74c3c;--orange:#e67e22;
+  --hover:rgba(255,255,255,0.03);--inset:rgba(0,0,0,0.3);--grid:rgba(255,255,255,0.05);
+  --pill-blue-fg:#90b8f7;--pill-purple-fg:#c39bd3;--pill-green-fg:#9bd47f;
+  --pill-red-fg:#ec8076;--pill-grey-fg:#a4b0b1;--pill-teal-fg:#76d7c4;
+  --star-empty:rgba(255,255,255,0.15);
+}
+[data-theme="light"]{
+  --bg:#f5f6f8;--surface:#ffffff;--surface2:#f0f1f4;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.18);
+  --text:#1a1d24;--text2:rgba(26,29,36,0.66);--text3:rgba(26,29,36,0.45);
+  --accent:#b8830a;--green:#2f7212;--blue:#1d4ed8;--red:#b91c1c;--orange:#c2570c;
+  --hover:rgba(0,0,0,0.03);--inset:rgba(0,0,0,0.04);--grid:rgba(0,0,0,0.07);
+  --pill-blue-fg:#1d4ed8;--pill-purple-fg:#7e22ce;--pill-green-fg:#15803d;
+  --pill-red-fg:#b91c1c;--pill-grey-fg:#475569;--pill-teal-fg:#0f766e;
+  --star-empty:rgba(0,0,0,0.15);
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px}
+button,input,select{font-family:inherit;color:inherit}
+button{cursor:pointer;border:none;outline:none;background:none}
+
+.app{max-width:1400px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:56px}
+
+/* Header */
+.header{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.header h1{font-size:22px;font-weight:700}
+.header .sub{color:var(--text3);font-size:13px;margin-top:2px}
+.header-right{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.imp-input{display:flex;flex-direction:column;gap:4px}
+.imp-input label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.imp-input input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;width:140px;font-variant-numeric:tabular-nums}
+.imp-input input:focus{border-color:var(--blue);outline:none}
+.theme-toggle{display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:16px;transition:background .15s,color .15s,border-color .15s;align-self:flex-end}
+.theme-toggle:hover{border-color:var(--border2);color:var(--text);background:var(--surface)}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.kpi .label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:500}
+.kpi .value{font-size:28px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .hint{font-size:12px;color:var(--text3);margin-top:4px}
+.kpi.warn .value{color:var(--orange)}
+
+/* Section grid */
+.row{display:grid;gap:32px}
+.row.two{grid-template-columns:1fr 1fr}
+.row.two-uneven{grid-template-columns:1fr 1.4fr}
+@media(max-width:900px){.row.two,.row.two-uneven{grid-template-columns:1fr}}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.panel h2{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.panel h2 .meta{font-weight:400;color:var(--text3);font-size:12px}
+
+.chart-wrap{position:relative;height:240px}
+
+/* Filters */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.filter{display:flex;align-items:center;gap:6px}
+.filter label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.chip-group{display:flex;gap:4px;flex-wrap:wrap}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--border2);color:var(--text)}
+.chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.t-payment_window.active{background:#4285f4;border-color:#4285f4}
+.chip.t-ui.active{background:#9b59b6;border-color:#9b59b6}
+.chip.t-assortment.active{background:#16a085;border-color:#16a085}
+.chip.t-none.active{background:#7f8c8d;border-color:#7f8c8d}
+.chip.s-positive.active{background:var(--green);border-color:var(--green)}
+.chip.s-negative.active{background:var(--red);border-color:var(--red)}
+.chip.s-neutral.active{background:#7f8c8d;border-color:#7f8c8d}
+.search-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px;width:240px}
+.search-input:focus{border-color:var(--blue);outline:none}
+.toggle{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2)}
+.toggle input{accent-color:var(--blue)}
+
+/* Comments table */
+.table-wrap{overflow:auto}
+table.comments{width:100%;border-collapse:collapse;font-size:13px}
+table.comments th{text-align:left;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border)}
+table.comments td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.comments tr:hover td{background:var(--hover)}
+table.comments .col-rating{width:60px}
+table.comments .col-topics{width:200px}
+table.comments .col-sent{width:90px}
+table.comments .col-val{width:80px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text2)}
+table.comments .col-date{width:140px;color:var(--text3);font-variant-numeric:tabular-nums}
+
+.stars{color:var(--accent);letter-spacing:1px;font-size:13px;white-space:nowrap}
+.star-empty{color:var(--star-empty)}
+
+.comment-cell{max-width:520px;line-height:1.5}
+.comment-text{color:var(--text)}
+.translated-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text3);background:var(--inset);border:1px solid var(--border);border-radius:10px;padding:1px 7px;margin-left:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.05em;font-weight:500;vertical-align:middle}
+.translated-badge:hover{border-color:var(--border2);color:var(--text2)}
+.original-block{margin-top:6px;padding:8px 10px;background:var(--inset);border-left:2px solid var(--blue);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);display:none}
+.original-block.show{display:block}
+.original-block .orig-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+
+.topic-pills{display:flex;gap:4px;flex-wrap:wrap}
+.topic-pill{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.topic-pill.payment_window{background:rgba(66,133,244,0.18);color:var(--pill-blue-fg);border:1px solid rgba(66,133,244,0.3)}
+.topic-pill.ui{background:rgba(155,89,182,0.18);color:var(--pill-purple-fg);border:1px solid rgba(155,89,182,0.3)}
+.topic-pill.assortment{background:rgba(22,160,133,0.18);color:var(--pill-teal-fg);border:1px solid rgba(22,160,133,0.3)}
+.topic-pill.none{background:rgba(127,140,141,0.15);color:var(--text3);border:1px solid rgba(127,140,141,0.25)}
+
+.sent-pill{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;display:inline-block}
+.sent-pill.positive{background:rgba(81,172,23,0.18);color:var(--pill-green-fg);border:1px solid rgba(81,172,23,0.3)}
+.sent-pill.negative{background:rgba(231,76,60,0.18);color:var(--pill-red-fg);border:1px solid rgba(231,76,60,0.3)}
+.sent-pill.neutral{background:rgba(127,140,141,0.18);color:var(--pill-grey-fg);border:1px solid rgba(127,140,141,0.3)}
+.sent-pill.empty{color:var(--text3)}
+
+.pagination{display:flex;align-items:center;justify-content:space-between;padding-top:14px;color:var(--text3);font-size:12px}
+.pagination .pages{display:flex;gap:4px}
+.page-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-variant-numeric:tabular-nums}
+.page-btn:hover:not(:disabled){border-color:var(--border2);color:var(--text)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.page-btn.current{background:var(--blue);border-color:var(--blue);color:#fff}
+
+.loading,.error{padding:40px;text-align:center;color:var(--text3)}
+.error{color:var(--red)}
+.error code{background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--text2);font-size:12px}
+
+.lang-flag{font-weight:600;color:var(--text2);text-transform:uppercase;font-size:9px;letter-spacing:.08em}
+
+/* Suggested next steps */
+.suggestions{display:flex;flex-direction:column;gap:14px}
+.suggestion{display:flex;gap:14px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;align-items:flex-start}
+.sug-prio{flex-shrink:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 9px;border-radius:6px;line-height:1}
+.sug-prio.high{background:rgba(231,76,60,0.18);color:var(--pill-red-fg);border:1px solid rgba(231,76,60,0.3)}
+.sug-prio.medium{background:rgba(66,133,244,0.18);color:var(--pill-blue-fg);border:1px solid rgba(66,133,244,0.3)}
+.sug-prio.low{background:rgba(127,140,141,0.18);color:var(--pill-grey-fg);border:1px solid rgba(127,140,141,0.3)}
+.sug-content{flex:1;min-width:0}
+.sug-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.3}
+.sug-body{font-size:13px;color:var(--text2);line-height:1.5}
+.sug-examples{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.sug-example{font-size:12px;color:var(--text2);padding:6px 10px;background:var(--inset);border-left:2px solid var(--border2);border-radius:0 6px 6px 0;line-height:1.4}
+.sug-example .stars{font-size:11px;margin-right:6px}
+.sug-example .lang-tag{font-size:9px;color:var(--text3);text-transform:uppercase;margin-left:4px;letter-spacing:.06em}
+.suggestions-empty{color:var(--text3);font-size:13px;padding:20px;text-align:center}
+
+/* Source bar */
+.source-bar{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;flex-wrap:wrap}
+.source-bar.dragging{border-color:var(--blue);background:var(--surface2)}
+.source-status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);flex:1;min-width:200px}
+.source-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.source-dot.warn{background:var(--orange)}
+.source-dot.idle{background:var(--text3)}
+.source-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn:hover:not(:disabled){border-color:var(--border2);background:var(--surface)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover:not(:disabled){opacity:.9;background:var(--blue)}
+.btn.ghost{background:transparent}
+.key-input{display:flex;gap:6px;align-items:center}
+.key-input input{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;font-family:'SFMono-Regular',Menlo,monospace;width:240px}
+.key-input input:focus{border-color:var(--blue);outline:none}
+.key-hint{font-size:11px;color:var(--text3);margin-left:auto}
+.progress-bar{flex:1;min-width:120px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.progress-bar > div{height:100%;background:var(--blue);transition:width .3s}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:50;max-width:480px}
+.toast.error{border-color:var(--red);color:var(--pill-red-fg)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div id="content">
+    <div class="loading">Loading data…</div>
+  </div>
+</div>
+
+<template id="tpl-app">
+<div class="header">
+  <div>
+    <h1>NPS Dashboard</h1>
+    <div class="sub" id="meta-sub"></div>
+  </div>
+  <div class="header-right">
+    <div class="imp-input">
+      <label for="impressions">Modal impressions</label>
+      <input type="number" id="impressions" min="0" step="1"/>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+  </div>
+</div>
+
+<div class="source-bar" id="source-bar">
+  <div class="source-status">
+    <span class="source-dot idle" id="source-dot"></span>
+    <span id="source-text">Drop a CSV here or click "Load CSV"</span>
+  </div>
+  <div class="source-actions" id="source-actions">
+    <input type="file" id="file-input" accept=".csv,text/csv" style="display:none"/>
+    <button class="btn" id="btn-load">📂 Load CSV</button>
+    <button class="btn primary" id="btn-enrich" style="display:none">✨ Enrich with Claude</button>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="label">Total responses</div><div class="value" id="kpi-total">—</div><div class="hint" id="kpi-total-hint"></div></div>
+  <div class="kpi"><div class="label">Response rate</div><div class="value" id="kpi-rate">—</div><div class="hint">of impressions</div></div>
+  <div class="kpi"><div class="label">Avg rating</div><div class="value" id="kpi-avg">—</div><div class="hint" id="kpi-avg-hint"></div></div>
+  <div class="kpi"><div class="label">With comment</div><div class="value" id="kpi-comments">—</div><div class="hint" id="kpi-comments-hint"></div></div>
+  <div class="kpi warn"><div class="label">⚠ Anomalies</div><div class="value" id="kpi-anom">—</div><div class="hint">4-5★ + negative</div></div>
+</div>
+
+<div class="row two">
+  <div class="panel">
+    <h2>Rating distribution <span class="meta" id="dist-meta"></span></h2>
+    <div class="chart-wrap"><canvas id="chart-dist"></canvas></div>
+  </div>
+  <div class="panel">
+    <h2>Responses per day <span class="meta" id="ts-meta"></span></h2>
+    <div class="chart-wrap"><canvas id="chart-ts"></canvas></div>
+  </div>
+</div>
+
+<div class="row two">
+  <div class="panel">
+    <h2>Topic distribution <span class="meta">comments only</span></h2>
+    <div class="chart-wrap"><canvas id="chart-topics"></canvas></div>
+  </div>
+  <div class="panel">
+    <h2>Sentiment by topic</h2>
+    <div class="chart-wrap"><canvas id="chart-sent"></canvas></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Comments <span class="meta" id="table-meta"></span></h2>
+  <div class="filters">
+    <div class="filter">
+      <label>Rating</label>
+      <div class="chip-group" id="f-rating">
+        <button class="chip" data-rating="1">1★</button>
+        <button class="chip" data-rating="2">2★</button>
+        <button class="chip" data-rating="3">3★</button>
+        <button class="chip" data-rating="4">4★</button>
+        <button class="chip" data-rating="5">5★</button>
+      </div>
+    </div>
+    <div class="filter">
+      <label>Topic</label>
+      <div class="chip-group" id="f-topic">
+        <button class="chip t-payment_window" data-topic="payment_window">Payment</button>
+        <button class="chip t-ui" data-topic="ui">UI</button>
+        <button class="chip t-assortment" data-topic="assortment">Assortment</button>
+        <button class="chip t-none" data-topic="none">None</button>
+      </div>
+    </div>
+    <div class="filter">
+      <label>Sentiment</label>
+      <div class="chip-group" id="f-sent">
+        <button class="chip s-positive" data-sent="positive">Positive</button>
+        <button class="chip s-neutral" data-sent="neutral">Neutral</button>
+        <button class="chip s-negative" data-sent="negative">Negative</button>
+      </div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="f-with-comment" checked/>only with comment</label>
+    <input class="search-input" type="search" id="f-search" placeholder="search comment…"/>
+  </div>
+
+  <div class="table-wrap">
+    <table class="comments">
+      <thead>
+        <tr>
+          <th class="col-rating">Rating</th>
+          <th>Comment</th>
+          <th class="col-topics">Topics</th>
+          <th class="col-sent">Sentiment</th>
+          <th class="col-val">$</th>
+          <th class="col-date">Date</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <span id="page-info"></span>
+    <div class="pages" id="page-buttons"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Suggested next steps <span class="meta">heuristics over the full dataset</span></h2>
+  <div class="suggestions" id="suggestions"></div>
+</div>
+</template>
+
+<script>
+const PAGE_SIZE = 50;
+const TOPICS = ["payment_window", "ui", "assortment"];
+const TOPIC_LABEL = { payment_window: "Payment", ui: "UI", assortment: "Assortment", none: "None" };
+const TOPIC_COLOR = { payment_window: "#4285f4", ui: "#9b59b6", assortment: "#16a085", none: "#7f8c8d" };
+const SENT_COLOR = { positive: "#51ac17", neutral: "#7f8c8d", negative: "#e74c3c" };
+
+// State
+const state = {
+  items: [],
+  meta: null,
+  source: "empty", // "empty" | "json" | "file"
+  sourceName: "",
+  enriching: false,
+  filters: {
+    rating: new Set(),
+    topic: new Set(),
+    sent: new Set(),
+    withComment: true,
+    search: "",
+  },
+  page: 1,
+  charts: {},
+};
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────
+async function load() {
+  // Always render the template so the user can pick a CSV even if no JSON exists.
+  state.meta = { items: [], generated_at: null, source_csv: null, model: null };
+  render();
+
+  // Try fetching pre-generated JSON; if missing, stay in "empty" state.
+  try {
+    const r = await fetch("data/responses.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    state.items = data.items;
+    state.meta = data;
+    state.source = "json";
+    state.sourceName = data.source_csv || "responses.json";
+    recomputeAll();
+    updateSourceBar();
+  } catch (e) {
+    // Silent — user is expected to load a CSV via UI.
+  }
+}
+
+// ── CSV parsing (same logic as scripts/enrich.mjs, ported to browser) ─────
+function parseCsv(text) {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ";") { row.push(field); field = ""; }
+      else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+      else if (c === "\r") { /* skip */ }
+      else field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  const [header, ...data] = rows;
+  return data
+    .filter(r => r.length === header.length && r.some(v => v !== ""))
+    .map(r => Object.fromEntries(header.map((h, i) => [h.trim(), r[i]])));
+}
+
+function normalizeRow(raw) {
+  const comment = (raw.comment ?? "").trim();
+  return {
+    id: Number(raw.id),
+    order_id: Number(raw.order_id),
+    rating: Number(raw.rating),
+    comment: comment || null,
+    order_value_usd: raw.order_value_usd ? Number(raw.order_value_usd) : null,
+    created_at: raw.created_at ? new Date(raw.created_at.replace(" ", "T") + "Z").toISOString() : null,
+    comment_en: null, comment_lang: null, topics: [], sentiment: null,
+  };
+}
+
+async function loadCsvText(text, sourceName) {
+  const raw = parseCsv(text);
+  const items = raw.map(normalizeRow).filter(r => Number.isFinite(r.id));
+  if (items.length === 0) { showToast("No valid rows found in CSV", true); return; }
+
+  // Apply per-comment cache so already-enriched comments come back enriched
+  const cache = readEnrichCache();
+  for (const it of items) {
+    if (it.comment && cache[it.comment]) Object.assign(it, cache[it.comment]);
+  }
+
+  state.items = items;
+  state.source = "file";
+  state.sourceName = sourceName;
+  state.meta = {
+    items, generated_at: new Date().toISOString(), source_csv: sourceName,
+    model: items.some(i => i.comment_lang) ? "from cache" : null,
+    counts: { total: items.length },
+  };
+  state.page = 1;
+  recomputeAll();
+  updateSourceBar();
+  showToast(`Loaded ${items.length} rows from ${sourceName}`);
+}
+
+// ── Browser-side enrichment via Claude API ────────────────────────────────
+const ENRICH_SYSTEM = `You classify and translate e-commerce NPS comments from a video-game web shop (in-game items, currency packs).
+
+For each input comment, return one JSON object:
+- id: number (echo back the input id)
+- comment_en: faithful English translation. If already English, copy verbatim. Preserve meaning, do not editorialize.
+- comment_lang: ISO 639-1 code of the source language ("en" if already English; "und" only if undetectable / pure emoji / single non-word like "ok").
+- topics: array, subset of ["payment_window", "ui", "assortment"]. Empty array if none clearly apply.
+    * payment_window: payment flow, checkout UX, card declined, slow/laggy payment, security checks freezing the user, payment methods (Apple Pay, Google Pay, QR), currency conversion, processing center issues, "translation at payment".
+    * ui: shop interface (NOT the payment window itself), layout, navigation, slowness of the shop, bugs/glitches, ads in UI, localization of the shop UI, search/filters, multi-purchase ergonomics.
+    * assortment: product range, prices being too high/low, missing items, requests for new bundles/items, discount/sale availability, complaints about offers running out.
+- sentiment: "positive" | "neutral" | "negative"
+
+Notes:
+- A single comment can map to multiple topics.
+- Generic praise ("good", "fast", "great", "thanks", "хорошо") → topics:[], sentiment:"positive".
+- Empty/spam/noise → topics:[], sentiment:"neutral".
+
+Return ONLY a JSON array of these objects. No prose, no markdown fences.`;
+
+const ENRICH_MODEL = "claude-haiku-4-5-20251001";
+const ENRICH_BATCH = 25;
+const VALID_TOPICS = new Set(["payment_window", "ui", "assortment"]);
+const VALID_SENT = new Set(["positive", "neutral", "negative"]);
+const CACHE_KEY = "nps_enrich_cache_v1";
+
+function readEnrichCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}"); }
+  catch { return {}; }
+}
+function writeEnrichCache(c) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(c)); } catch (e) { /* quota */ }
+}
+
+async function callClaudeBatch(apiKey, batch) {
+  const userBlock = batch.map(it =>
+    `id=${it.id} | rating=${it.rating} | comment: ${JSON.stringify(it.comment)}`
+  ).join("\n");
+
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: ENRICH_MODEL,
+      max_tokens: 4096,
+      system: ENRICH_SYSTEM,
+      messages: [{ role: "user", content: userBlock }],
+    }),
+  });
+  if (!r.ok) {
+    const err = await r.text();
+    throw new Error(`Claude API ${r.status}: ${err.slice(0, 220)}`);
+  }
+  const data = await r.json();
+  const text = (data.content || []).map(b => b.type === "text" ? b.text : "").join("").trim();
+  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) throw new Error("expected JSON array");
+  return parsed;
+}
+
+async function enrichItems(apiKey) {
+  if (state.enriching) return;
+  const todo = state.items.filter(i => i.comment && !i.comment_lang);
+  if (todo.length === 0) { showToast("Nothing to enrich"); return; }
+
+  state.enriching = true;
+  updateSourceBar();
+  const cache = readEnrichCache();
+  let done = 0;
+
+  try {
+    for (let i = 0; i < todo.length; i += ENRICH_BATCH) {
+      const batch = todo.slice(i, i + ENRICH_BATCH);
+      let parsed;
+      try {
+        parsed = await callClaudeBatch(apiKey, batch);
+      } catch (e) {
+        showToast(`Enrich failed: ${e.message}`, true);
+        break;
+      }
+      const byId = new Map(parsed.map(p => [Number(p.id), p]));
+      for (const it of batch) {
+        const p = byId.get(it.id);
+        const enriched = p ? {
+          comment_en: typeof p.comment_en === "string" ? p.comment_en : it.comment,
+          comment_lang: typeof p.comment_lang === "string" ? p.comment_lang : "und",
+          topics: Array.isArray(p.topics) ? p.topics.filter(t => VALID_TOPICS.has(t)) : [],
+          sentiment: VALID_SENT.has(p.sentiment) ? p.sentiment : "neutral",
+        } : { comment_en: it.comment, comment_lang: "und", topics: [], sentiment: "neutral" };
+        Object.assign(it, enriched);
+        cache[it.comment] = enriched;
+      }
+      writeEnrichCache(cache);
+      done += batch.length;
+      state.meta.model = ENRICH_MODEL;
+      updateSourceBar(done, todo.length);
+      recomputeAll();
+    }
+  } finally {
+    state.enriching = false;
+    updateSourceBar();
+  }
+}
+
+// ── Source bar UI ─────────────────────────────────────────────────────────
+function updateSourceBar(progress, total) {
+  const dot = document.getElementById("source-dot");
+  const text = document.getElementById("source-text");
+  const actions = document.getElementById("source-actions");
+  if (!dot || !text || !actions) return;
+
+  const enriched = state.items.filter(i => i.comment_lang).length;
+  const commented = state.items.filter(i => i.comment).length;
+  const pending = commented - enriched;
+
+  if (state.enriching) {
+    dot.className = "source-dot warn";
+    text.innerHTML = `Enriching… <strong>${progress || 0} / ${total}</strong> comments processed`;
+    actions.innerHTML = `<div class="progress-bar"><div style="width:${total ? (progress / total * 100) : 0}%"></div></div>`;
+    return;
+  }
+
+  if (state.source === "empty") {
+    dot.className = "source-dot idle";
+    text.textContent = "Drop a CSV here or click \"Load CSV\"";
+  } else {
+    dot.className = "source-dot";
+    const src = state.source === "file" ? "uploaded" : "data/responses.json";
+    text.innerHTML = `<strong>${state.items.length}</strong> rows · ${commented} with comment${enriched ? ` · <strong>${enriched}</strong> enriched` : ""} · source: ${src}${state.sourceName ? ` (${state.sourceName})` : ""}`;
+  }
+
+  actions.innerHTML = `
+    <input type="file" id="file-input" accept=".csv,text/csv" style="display:none"/>
+    <button class="btn" id="btn-load">📂 Load CSV</button>
+    ${pending > 0 ? `<button class="btn primary" id="btn-enrich">✨ Enrich ${pending} comment${pending === 1 ? "" : "s"}</button>` : ""}
+  `;
+  wireSourceBarButtons();
+}
+
+function wireSourceBarButtons() {
+  const fileInput = document.getElementById("file-input");
+  const btnLoad = document.getElementById("btn-load");
+  const btnEnrich = document.getElementById("btn-enrich");
+
+  if (btnLoad && fileInput) {
+    btnLoad.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const text = await f.text();
+      await loadCsvText(text, f.name);
+    });
+  }
+  if (btnEnrich) btnEnrich.addEventListener("click", promptKeyAndEnrich);
+}
+
+function promptKeyAndEnrich() {
+  let key = sessionStorage.getItem("nps_api_key");
+  if (key) { enrichItems(key); return; }
+
+  const actions = document.getElementById("source-actions");
+  actions.innerHTML = `
+    <div class="key-input">
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off"/>
+      <button class="btn primary" id="btn-key-run">Run</button>
+      <button class="btn ghost" id="btn-key-cancel">Cancel</button>
+    </div>
+    <span class="key-hint">Sent directly to api.anthropic.com · sessionStorage only</span>
+  `;
+  const input = document.getElementById("api-key-input");
+  input.focus();
+  const run = () => {
+    const k = input.value.trim();
+    if (!k.startsWith("sk-ant-")) { showToast("Looks like an invalid Anthropic key", true); return; }
+    sessionStorage.setItem("nps_api_key", k);
+    enrichItems(k);
+  };
+  document.getElementById("btn-key-run").addEventListener("click", run);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+  document.getElementById("btn-key-cancel").addEventListener("click", updateSourceBar);
+}
+
+function setupDragDrop() {
+  // Block default browser file-open if user drops outside the source bar.
+  if (!window._dropGuardInstalled) {
+    ["dragover", "drop"].forEach(ev => window.addEventListener(ev, e => e.preventDefault()));
+    window._dropGuardInstalled = true;
+  }
+  const bar = document.getElementById("source-bar");
+  if (!bar) return;
+  ["dragenter", "dragover"].forEach(ev => bar.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation();
+    bar.classList.add("dragging");
+  }));
+  ["dragleave", "drop"].forEach(ev => bar.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation();
+    bar.classList.remove("dragging");
+  }));
+  bar.addEventListener("drop", async e => {
+    const f = e.dataTransfer.files?.[0];
+    if (!f) return;
+    if (!f.name.toLowerCase().endsWith(".csv")) { showToast("Please drop a .csv file", true); return; }
+    const text = await f.text();
+    await loadCsvText(text, f.name);
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, isError) {
+  let t = document.querySelector(".toast");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.toggle("error", !!isError);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.remove(); }, 3500);
+}
+
+function render() {
+  const tpl = document.getElementById("tpl-app");
+  document.getElementById("content").replaceChildren(tpl.content.cloneNode(true));
+  setupHeader();
+  setupFilters();
+  setupDragDrop();
+  updateSourceBar();
+  document.getElementById("rows").addEventListener("click", onTranslateToggle);
+  recomputeAll();
+}
+
+function updateMetaSub() {
+  const el = document.getElementById("meta-sub");
+  if (!el) return;
+  const m = state.meta || {};
+  const total = state.items.length;
+  if (!total) { el.textContent = "no data loaded"; return; }
+  const generated = m.generated_at ? new Date(m.generated_at).toLocaleString() : "—";
+  const modelTag = m.model ? `model: ${m.model}` : "not enriched";
+  el.textContent = `${total} responses · ${generated} · ${modelTag}`;
+}
+
+function setupHeader() {
+  updateMetaSub();
+  const imp = document.getElementById("impressions");
+  imp.value = localStorage.getItem("nps_impressions") || 46728;
+  imp.addEventListener("input", () => {
+    localStorage.setItem("nps_impressions", imp.value);
+    recomputeKPIs();
+    renderSuggestions();
+  });
+
+  const toggle = document.getElementById("theme-toggle");
+  const refreshIcon = () => {
+    toggle.textContent = document.documentElement.dataset.theme === "light" ? "☀️" : "🌙";
+  };
+  refreshIcon();
+  toggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("nps_theme", next);
+    refreshIcon();
+    // Charts read CSS vars at construction — destroy & rebuild so they pick up the new theme.
+    renderRatingDist();
+    renderTimeSeries();
+    renderTopicCharts();
+  });
+}
+
+function setupFilters() {
+  const bind = (containerId, key, attr) => {
+    document.getElementById(containerId).addEventListener("click", e => {
+      const btn = e.target.closest(".chip");
+      if (!btn) return;
+      const v = btn.dataset[attr];
+      btn.classList.toggle("active");
+      if (state.filters[key].has(v)) state.filters[key].delete(v);
+      else state.filters[key].add(v);
+      state.page = 1;
+      renderTable();
+      renderTopicCharts();
+    });
+  };
+  bind("f-rating", "rating", "rating");
+  bind("f-topic", "topic", "topic");
+  bind("f-sent", "sent", "sent");
+
+  document.getElementById("f-with-comment").addEventListener("change", e => {
+    state.filters.withComment = e.target.checked;
+    state.page = 1;
+    renderTable();
+    renderTopicCharts();
+  });
+  document.getElementById("f-search").addEventListener("input", e => {
+    state.filters.search = e.target.value.trim().toLowerCase();
+    state.page = 1;
+    renderTable();
+  });
+}
+
+function recomputeAll() {
+  updateMetaSub();
+  recomputeKPIs();
+  renderRatingDist();
+  renderTimeSeries();
+  renderTopicCharts();
+  renderTable();
+  renderSuggestions();
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────
+function recomputeKPIs() {
+  const items = state.items;
+  const total = items.length;
+  const withComment = items.filter(i => i.comment).length;
+  const sumRating = items.reduce((s, i) => s + (i.rating || 0), 0);
+  const avg = total ? sumRating / total : 0;
+  const imp = Number(document.getElementById("impressions").value) || 0;
+  const rate = imp > 0 ? (total / imp) * 100 : 0;
+  const anomalies = items.filter(i => i.rating >= 4 && i.sentiment === "negative").length;
+
+  document.getElementById("kpi-total").textContent = total.toLocaleString();
+  document.getElementById("kpi-total-hint").textContent = state.meta.source_csv || "";
+  document.getElementById("kpi-rate").textContent = imp ? `${rate.toFixed(2)}%` : "—";
+  document.getElementById("kpi-avg").textContent = total ? avg.toFixed(2) : "—";
+  document.getElementById("kpi-avg-hint").textContent = total ? "out of 5.00" : "";
+  document.getElementById("kpi-comments").textContent = total ? `${(withComment / total * 100).toFixed(1)}%` : "—";
+  document.getElementById("kpi-comments-hint").textContent = total ? `${withComment} of ${total}` : "";
+  document.getElementById("kpi-anom").textContent = anomalies;
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+function chartDefaults() {
+  const text2 = cssVar("--text2"), text3 = cssVar("--text3"), grid = cssVar("--grid");
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: text2, font: { family: "Inter", size: 12 } } },
+    },
+    scales: {
+      x: { ticks: { color: text3 }, grid: { color: grid } },
+      y: { ticks: { color: text3 }, grid: { color: grid }, beginAtZero: true },
+    },
+  };
+}
+
+function destroyChart(key) { if (state.charts[key]) { state.charts[key].destroy(); delete state.charts[key]; } }
+
+function renderRatingDist() {
+  const counts = [1, 2, 3, 4, 5].map(r => state.items.filter(i => i.rating === r).length);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const colors = ["#e74c3c", "#e67e22", "#f0c323", "#a3c544", "#51ac17"];
+  destroyChart("dist");
+  state.charts.dist = new Chart(document.getElementById("chart-dist"), {
+    type: "bar",
+    data: {
+      labels: ["1★", "2★", "3★", "4★", "5★"],
+      datasets: [{ data: counts, backgroundColor: colors, borderRadius: 6 }],
+    },
+    options: {
+      ...chartDefaults(),
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} (${(ctx.parsed.y / total * 100).toFixed(1)}%)` } },
+      },
+    },
+  });
+  document.getElementById("dist-meta").textContent = `${total} total`;
+}
+
+function renderTimeSeries() {
+  const byDay = new Map();
+  for (const it of state.items) {
+    if (!it.created_at) continue;
+    const d = it.created_at.slice(0, 10);
+    if (!byDay.has(d)) byDay.set(d, { count: 0, sum: 0 });
+    const x = byDay.get(d);
+    x.count++; x.sum += it.rating;
+  }
+  const days = [...byDay.keys()].sort();
+  const counts = days.map(d => byDay.get(d).count);
+  const avgs = days.map(d => byDay.get(d).sum / byDay.get(d).count);
+
+  destroyChart("ts");
+  const D = chartDefaults();
+  const blue = cssVar("--blue"), accent = cssVar("--accent"), text3 = cssVar("--text3");
+  state.charts.ts = new Chart(document.getElementById("chart-ts"), {
+    type: "bar",
+    data: {
+      labels: days.map(d => d.slice(5)),
+      datasets: [
+        { type: "bar", label: "Responses", data: counts, backgroundColor: blue + "b3", borderRadius: 4, yAxisID: "y" },
+        { type: "line", label: "Avg rating", data: avgs, borderColor: accent, backgroundColor: "transparent", tension: 0.3, pointRadius: 3, yAxisID: "y2" },
+      ],
+    },
+    options: {
+      ...D,
+      scales: {
+        x: D.scales.x,
+        y: { ...D.scales.y, position: "left", title: { display: true, text: "Count", color: text3 } },
+        y2: { position: "right", min: 1, max: 5, ticks: { color: accent }, grid: { drawOnChartArea: false } },
+      },
+    },
+  });
+  document.getElementById("ts-meta").textContent = days.length ? `${days[0]} → ${days[days.length - 1]}` : "";
+}
+
+function renderTopicCharts() {
+  // Topic dist (only items with comment)
+  const withComment = state.items.filter(i => i.comment);
+  const topicCounts = { payment_window: 0, ui: 0, assortment: 0, none: 0 };
+  for (const it of withComment) {
+    if (!it.topics || it.topics.length === 0) topicCounts.none++;
+    else for (const t of it.topics) if (t in topicCounts) topicCounts[t]++;
+  }
+  const labels = Object.keys(topicCounts);
+  destroyChart("topics");
+  state.charts.topics = new Chart(document.getElementById("chart-topics"), {
+    type: "bar",
+    data: {
+      labels: labels.map(l => TOPIC_LABEL[l]),
+      datasets: [{ data: labels.map(l => topicCounts[l]), backgroundColor: labels.map(l => TOPIC_COLOR[l]), borderRadius: 6 }],
+    },
+    options: {
+      ...chartDefaults(),
+      indexAxis: "y",
+      plugins: { legend: { display: false } },
+    },
+  });
+
+  // Sentiment by topic (stacked)
+  const sentByTopic = { payment_window: { positive: 0, neutral: 0, negative: 0 },
+                        ui: { positive: 0, neutral: 0, negative: 0 },
+                        assortment: { positive: 0, neutral: 0, negative: 0 },
+                        none: { positive: 0, neutral: 0, negative: 0 } };
+  for (const it of withComment) {
+    const s = it.sentiment || "neutral";
+    if (!it.topics || it.topics.length === 0) sentByTopic.none[s]++;
+    else for (const t of it.topics) if (t in sentByTopic) sentByTopic[t][s]++;
+  }
+  destroyChart("sent");
+  state.charts.sent = new Chart(document.getElementById("chart-sent"), {
+    type: "bar",
+    data: {
+      labels: labels.map(l => TOPIC_LABEL[l]),
+      datasets: ["positive", "neutral", "negative"].map(s => ({
+        label: s, data: labels.map(l => sentByTopic[l][s]), backgroundColor: SENT_COLOR[s], borderRadius: 4,
+      })),
+    },
+    options: (() => {
+      const D = chartDefaults();
+      return {
+        ...D,
+        indexAxis: "y",
+        scales: {
+          x: { ...D.scales.x, stacked: true },
+          y: { ...D.scales.y, stacked: true },
+        },
+      };
+    })(),
+  });
+}
+
+// ── Comments table ────────────────────────────────────────────────────────
+function applyFilters(items) {
+  const f = state.filters;
+  return items.filter(it => {
+    if (f.withComment && !it.comment) return false;
+    if (f.rating.size && !f.rating.has(String(it.rating))) return false;
+    if (f.sent.size) {
+      if (!it.sentiment || !f.sent.has(it.sentiment)) return false;
+    }
+    if (f.topic.size) {
+      const inNone = f.topic.has("none") && (!it.topics || it.topics.length === 0);
+      const inAny = it.topics && it.topics.some(t => f.topic.has(t));
+      if (!inNone && !inAny) return false;
+    }
+    if (f.search) {
+      const hay = (it.comment_en || "") + " " + (it.comment || "");
+      if (!hay.toLowerCase().includes(f.search)) return false;
+    }
+    return true;
+  });
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function starsHtml(r) {
+  let s = "";
+  for (let i = 1; i <= 5; i++) s += i <= r ? "★" : '<span class="star-empty">★</span>';
+  return `<span class="stars">${s}</span>`;
+}
+
+function topicsHtml(topics) {
+  if (!topics || topics.length === 0) return `<span class="topic-pill none">none</span>`;
+  return `<div class="topic-pills">${topics.map(t => `<span class="topic-pill ${t}">${TOPIC_LABEL[t] || t}</span>`).join("")}</div>`;
+}
+
+function sentHtml(s) {
+  if (!s) return `<span class="sent-pill empty">—</span>`;
+  return `<span class="sent-pill ${s}">${s}</span>`;
+}
+
+function commentHtml(it) {
+  if (!it.comment) return `<span style="color:var(--text3)">—</span>`;
+  const en = it.comment_en || it.comment;
+  const lang = it.comment_lang;
+  const isTranslated = lang && lang !== "en" && lang !== "und" && en !== it.comment;
+  let html = `<div class="comment-text">${escapeHtml(en)}`;
+  if (isTranslated) {
+    html += `<button class="translated-badge" data-toggle="orig">🌐 translated from <span class="lang-flag">${escapeHtml(lang)}</span></button>`;
+  }
+  html += `</div>`;
+  if (isTranslated) {
+    html += `<div class="original-block"><div class="orig-label">Original (${escapeHtml(lang)})</div>${escapeHtml(it.comment)}</div>`;
+  } else if (lang === "und" && en !== it.comment) {
+    html += `<div class="original-block show"><div class="orig-label">Original</div>${escapeHtml(it.comment)}</div>`;
+  }
+  return html;
+}
+
+function renderTable() {
+  const filtered = applyFilters(state.items);
+  document.getElementById("table-meta").textContent = `${filtered.length} match`;
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if (state.page > totalPages) state.page = totalPages;
+  const start = (state.page - 1) * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = slice.map(it => `
+    <tr>
+      <td class="col-rating">${starsHtml(it.rating)}</td>
+      <td class="comment-cell">${commentHtml(it)}</td>
+      <td class="col-topics">${topicsHtml(it.topics)}</td>
+      <td class="col-sent">${sentHtml(it.sentiment)}</td>
+      <td class="col-val">${it.order_value_usd != null ? "$" + it.order_value_usd.toFixed(2) : ""}</td>
+      <td class="col-date">${it.created_at ? it.created_at.slice(0, 16).replace("T", " ") : ""}</td>
+    </tr>`).join("");
+
+  // pagination
+  document.getElementById("page-info").textContent =
+    filtered.length === 0 ? "no rows" : `${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length}`;
+  const pb = document.getElementById("page-buttons");
+  pb.innerHTML = "";
+  if (totalPages > 1) {
+    const make = (label, page, opts = {}) => {
+      const b = document.createElement("button");
+      b.className = "page-btn" + (opts.current ? " current" : "");
+      b.textContent = label;
+      b.disabled = !!opts.disabled;
+      b.onclick = () => { state.page = page; renderTable(); window.scrollTo({ top: pb.getBoundingClientRect().top + window.scrollY - 200, behavior: "smooth" }); };
+      pb.appendChild(b);
+    };
+    make("‹", state.page - 1, { disabled: state.page <= 1 });
+    const windowSize = 5;
+    let from = Math.max(1, state.page - 2);
+    let to = Math.min(totalPages, from + windowSize - 1);
+    from = Math.max(1, to - windowSize + 1);
+    for (let p = from; p <= to; p++) make(String(p), p, { current: p === state.page });
+    make("›", state.page + 1, { disabled: state.page >= totalPages });
+  }
+}
+
+function onTranslateToggle(e) {
+  const badge = e.target.closest(".translated-badge");
+  if (!badge) return;
+  const tr = badge.closest("tr");
+  const orig = tr && tr.querySelector(".original-block");
+  if (orig) orig.classList.toggle("show");
+}
+
+// ── Suggestions engine ────────────────────────────────────────────────────
+// Rule-based heuristics over the enriched dataset.
+function computeSuggestions(items) {
+  const out = [];
+  const withComment = items.filter(i => i.comment);
+  if (withComment.length === 0) return out;
+
+  const sample = (arr, n) => arr.slice(0, n).map(i => ({
+    rating: i.rating, en: i.comment_en || i.comment, lang: i.comment_lang,
+  }));
+
+  // Rule 1 — Anomalies (high rating + negative)
+  const anom = items.filter(i => i.rating >= 4 && i.sentiment === "negative")
+                    .sort((a, b) => (b.order_value_usd || 0) - (a.order_value_usd || 0));
+  if (anom.length >= 3) {
+    out.push({
+      priority: "high",
+      title: `${anom.length} anomalies — high rating, negative comment`,
+      body: `These users gave 4–5★ but complained. They're satisfied enough not to churn yet, but unhappy with specific things. Address the friction before they downgrade or quietly leave.`,
+      examples: sample(anom, 3),
+    });
+  }
+
+  // Rule 2 — Top topic by negative sentiment volume
+  const negByTopic = { payment_window: [], ui: [], assortment: [] };
+  for (const i of withComment) {
+    if (i.sentiment !== "negative" || !i.topics) continue;
+    for (const t of i.topics) if (t in negByTopic) negByTopic[t].push(i);
+  }
+  const sortedTopics = Object.entries(negByTopic).sort((a, b) => b[1].length - a[1].length);
+  if (sortedTopics[0] && sortedTopics[0][1].length >= 3) {
+    const [topic, list] = sortedTopics[0];
+    out.push({
+      priority: "high",
+      title: `${TOPIC_LABEL[topic]} is the top negative topic (${list.length} comments)`,
+      body: `This is your highest-leverage area for product fixes. Aggregate the patterns below and prioritize them in the next sprint.`,
+      examples: sample(list, 3),
+    });
+  }
+
+  // Rule 3 — Recurring complaint patterns
+  const patterns = [
+    { re: /scam.?check|security check|verification|fraud check|2fa|авториз/i, label: "Security / verification check delays" },
+    { re: /\bvpn\b|\bypn\b/i, label: "VPN warning UX" },
+    { re: /\bslow\b|\blag\b|loading|delay|freeze|тормоз|долго|жутко/i, label: "Performance / loading slowness" },
+    { re: /\bexpensive\b|too costly|too high|too much|дорог/i, label: "Pricing complaints" },
+    { re: /decline|declined|refused|wouldn'?t let|can'?t (use|pay)|didn'?t (work|accept)|отказ/i, label: "Payment decline / failure" },
+    { re: /\bqr\b/i, label: "QR code flow" },
+    { re: /apple\s?pay|google\s?pay|gpay|applepay/i, label: "Apple Pay / Google Pay issues" },
+    { re: /\btranslat|not (in )?english|localiz/i, label: "Localization at payment" },
+    { re: /\bcard\b|карт/i, label: "Card linking issues" },
+  ];
+  const negative = withComment.filter(i => i.sentiment === "negative");
+  const matchedPatterns = patterns.map(p => {
+    const matches = negative.filter(i => p.re.test((i.comment_en || "") + " " + (i.comment || "")));
+    return { ...p, matches };
+  }).filter(p => p.matches.length >= 2)
+    .sort((a, b) => b.matches.length - a.matches.length);
+
+  for (const p of matchedPatterns.slice(0, 3)) {
+    out.push({
+      priority: "high",
+      title: `Recurring complaint: ${p.label} (${p.matches.length} mentions)`,
+      body: `Multiple users report this issue. Worth investigating as a single fix often resolves all instances.`,
+      examples: sample(p.matches, 2),
+    });
+  }
+
+  // Rule 4 — Low response rate
+  const imp = Number(document.getElementById("impressions")?.value) || 0;
+  if (imp > 0) {
+    const rate = items.length / imp * 100;
+    if (rate < 1.5) {
+      out.push({
+        priority: "medium",
+        title: `Low response rate: ${rate.toFixed(2)}% (${items.length} of ${imp.toLocaleString()})`,
+        body: `Below the 1–3% range typical for non-incentivized in-app NPS. Quick experiments worth running: smaller modal, single-tap rating without secondary CTA, show only after 2nd+ purchase, or auto-dismiss after N seconds.`,
+      });
+    }
+  }
+
+  // Rule 5 — Detractor comment-leaving rate
+  const lowRated = items.filter(i => i.rating <= 2);
+  const lowWithComment = lowRated.filter(i => i.comment);
+  if (lowRated.length >= 5) {
+    const lowRate = lowWithComment.length / lowRated.length;
+    if (lowRate < 0.5) {
+      out.push({
+        priority: "medium",
+        title: `Only ${(lowRate * 100).toFixed(0)}% of detractors (1–2★) leave a comment`,
+        body: `${lowWithComment.length} of ${lowRated.length}. The most actionable feedback comes from unhappy users — but most aren't telling you why. Consider a follow-up prompt for low ratings: "What went wrong?" with 2–3 quick options + free text.`,
+      });
+    }
+  }
+
+  // Rule 6 — Generic praise share
+  const positive = withComment.filter(i => i.sentiment === "positive");
+  if (positive.length >= 10) {
+    const generic = positive.filter(i => !i.topics || i.topics.length === 0);
+    const share = generic.length / positive.length;
+    if (share > 0.6) {
+      out.push({
+        priority: "low",
+        title: `${(share * 100).toFixed(0)}% of positive comments are generic praise`,
+        body: `${generic.length} of ${positive.length} positive comments are "good", "fast", "thanks" etc. — low signal value. Consider asking "What did you like specifically?" for 4–5★ to capture what's working and protect those flows from regressions.`,
+      });
+    }
+  }
+
+  // Rule 7 — Language coverage
+  const nonEn = withComment.filter(i => i.comment_lang && !["en", "und"].includes(i.comment_lang));
+  if (withComment.length >= 10 && nonEn.length / withComment.length > 0.3) {
+    const byLang = {};
+    for (const i of nonEn) byLang[i.comment_lang] = (byLang[i.comment_lang] || 0) + 1;
+    const top = Object.entries(byLang).sort((a, b) => b[1] - a[1]).slice(0, 4)
+      .map(([l, n]) => `${l.toUpperCase()} (${n})`);
+    out.push({
+      priority: "low",
+      title: `${(nonEn.length / withComment.length * 100).toFixed(0)}% of comments are non-English`,
+      body: `Top languages: ${top.join(", ")}. Confirm the shop UI is fully localized for these markets, and that customer support handles them. Non-English comments are also a leading indicator of which markets are the most engaged.`,
+    });
+  }
+
+  // Stable order: high → medium → low
+  const prioOrder = { high: 0, medium: 1, low: 2 };
+  out.sort((a, b) => prioOrder[a.priority] - prioOrder[b.priority]);
+  return out;
+}
+
+function renderSuggestions() {
+  const container = document.getElementById("suggestions");
+  if (!container) return;
+  const sugs = computeSuggestions(state.items);
+  if (sugs.length === 0) {
+    container.innerHTML = `<div class="suggestions-empty">No actionable signals detected — looks healthy, or dataset too small.</div>`;
+    return;
+  }
+  container.innerHTML = sugs.map(s => {
+    const examples = (s.examples || []).map(e => {
+      const stars = "★".repeat(e.rating) + '<span class="star-empty">' + "★".repeat(5 - e.rating) + "</span>";
+      const lang = e.lang && !["en", "und"].includes(e.lang) ? `<span class="lang-tag">[${e.lang}]</span>` : "";
+      return `<div class="sug-example"><span class="stars">${stars}</span>${escapeHtml(e.en)}${lang}</div>`;
+    }).join("");
+    return `<div class="suggestion">
+      <span class="sug-prio ${s.priority}">${s.priority}</span>
+      <div class="sug-content">
+        <div class="sug-title">${escapeHtml(s.title)}</div>
+        <div class="sug-body">${escapeHtml(s.body)}</div>
+        ${examples ? `<div class="sug-examples">${examples}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+load();
+</script>
+
+</body>
+</html>

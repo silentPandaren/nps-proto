@@ -1,0 +1,5 @@
+scripts/node_modules/
+scripts/package-lock.json
+data/responses.json
+data/responses.cache.json
+.DS_Store
